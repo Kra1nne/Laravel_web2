@@ -1,0 +1,67 @@
+{
+  "menu": [
+    {
+      "url": "/dashboard",
+      "name": "Dashboards",
+      "icon": "menu-icon tf-icons ri-home-smile-line",
+      "slug": "dashboard-analytics"
+    },
+    {
+      "url": "/facilities",
+      "name": "Facilities",
+      "icon": "menu-icon tf-icons ri-box-3-line",
+      "slug": "product-facilities"
+    },
+    {
+      "url": "/promos",
+      "name": "Promos",
+      "icon": "menu-icon tf-icons ri-gift-line",
+      "slug": "promos-facilities"
+    },
+    {
+      "url": "/foods",
+      "name": "Foods",
+      "icon": "menu-icon tf-icons ri-restaurant-2-line",
+      "slug": "food-menu"
+    },
+    {
+      "url": "/reservations",
+      "name": "Reservations",
+      "icon": "menu-icon tf-icons ri-list-view",
+      "slug": "reservation-list"
+    },
+    {
+      "menuHeader": "Management"
+    },
+    {
+      "url": "/feedback",
+      "name": "Feedback",
+      "icon": "menu-icon tf-icons ri-chat-4-line",
+      "slug": "feedback-list"
+    },
+    {
+      "url": "/logs",
+      "name": "Activity Logs",
+      "icon": "menu-icon tf-icons ri-file-list-3-line",
+      "slug": "user-logs"
+    },
+    {
+      "url": "/user",
+      "name": "Manage Accounts",
+      "icon": "menu-icon tf-icons ri-user-shared-2-line",
+      "slug": "user-accounts"
+    },
+    {
+      "url": "/report",
+      "name": "Generate Report",
+      "icon": "menu-icon tf-icons ri-file-line",
+      "slug": "reports-page"
+    },
+    {
+      "url": "/evaluation",
+      "name": "Evaluation",
+      "icon": "menu-icon tf-icons ri-file-4-line",
+      "slug": "evaluate-display"
+    }
+  ]
+}

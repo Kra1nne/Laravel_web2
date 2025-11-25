@@ -1,0 +1,145 @@
+<?php
+
+namespace App\Http\Controllers\dashboard;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Payment;
+use App\Models\Booking;
+use App\Models\Food;
+use App\Models\FoodBooking;
+use App\Models\Facility;
+use App\Models\Rating;
+use DB;
+
+
+class Analytics extends Controller
+{
+  public function index(Request $request)
+  {        
+                           
+      
+      $selectedYear = $request->input('year', now()->year);
+
+      $foodCount = Food::whereNull('deleted_at')->count();
+      $facilitycount = Facility::whereNull('deleted_at')->count();
+      $ratingavg = Rating::whereNull('deleted_at')->avg('rating');
+      $customerSatisfaction = $ratingavg ? round(($ratingavg / 5) * 100, 1) : 0;
+
+      $amountReservation = Payment::orderBy('created_at', 'desc')->get();
+
+      $availableYears = Payment::selectRaw('YEAR(created_at) as year')
+          ->distinct()
+          ->pluck('year')
+          ->toArray();
+
+      $monthlyPayments = Payment::selectRaw('MONTH(created_at) as month, SUM(amount) as total')
+          ->whereYear('created_at', $selectedYear)
+          ->groupBy('month')
+          ->orderBy('month')
+          ->pluck('total', 'month')
+          ->toArray();
+
+      $monthlyPartialPayments = Payment::leftjoin('bookings', 'bookings.id', '=', 'payments.bookings_id')
+            ->selectRaw("
+                MONTH(payments.created_at) as month,
+                SUM(
+                    CASE 
+                        WHEN payments.status = 'Fully Paid' AND bookings.walk_in != 0 THEN payments.amount / 2
+                        WHEN payments.status = 'Cancel' OR payments.status = 'Partial Payment' THEN payments.amount
+                        ELSE 0
+                    END
+                ) as total
+            ")
+            ->whereYear('payments.created_at', $selectedYear)
+            ->groupBy('month')
+            ->orderBy('month')
+            ->pluck('total', 'month')
+            ->toArray();
+
+
+      $months = range(1, 12);
+      $monthlyData = array_map(fn($month) => $monthlyPayments[$month] ?? 0, $months);
+      $monthlyPartialData = array_map(fn($month) => $monthlyPartialPayments[$month] ?? 0, $months);
+
+      $reservations = Booking::with('facility')
+          ->leftJoin('users', 'bookings.users_id', '=', 'users.id')
+          ->orderBy('bookings.updated_at', 'desc')
+          ->limit(8)
+          ->get();
+
+      $payment = Payment::orderBy('created_at', 'desc')->limit(5)->get();
+
+      $amount = Payment::sum('amount');
+
+      $totalReservations = Booking::count();
+      $averageRevenuePerReservation = $totalReservations > 0
+            ? round($amount / $totalReservations, 2)
+            : 0;
+
+        // --- Revenue trend (for sparkline)
+      $avgRevenueTrend = Payment::selectRaw('MONTH(created_at) as month, AVG(amount) as avg_amount')
+            ->whereYear('created_at', $selectedYear)
+            ->groupBy('month')
+            ->orderBy('month')
+            ->pluck('avg_amount', 'month')
+            ->toArray();
+
+       $avgRevenueTrend = array_values(array_replace(array_fill(1, 12, 0), $avgRevenueTrend));
+
+       $refundsData = Booking::select(
+            DB::raw('MONTH(created_at) as month'),
+            DB::raw('SUM(amount) as total')
+        )
+        ->whereYear('created_at', $selectedYear)
+        ->where('status', 'Cancel')
+        ->groupBy('month')
+        ->orderBy('month')
+        ->pluck('total', 'month')
+        ->toArray();
+
+        // Fill missing months with 0
+        $refundsData = collect(range(1, 12))->map(fn($m) => $refundsData[$m] ?? 0);
+
+         $roomData = Booking::leftjoin('facilities', 'facilities.id', '=', 'bookings.facilities_id')
+                ->where('facilities.category', "=",'room')
+                ->sum('bookings.facility_income');
+
+        $cottageData = Booking::leftjoin('facilities', 'facilities.id', '=', 'bookings.facilities_id')
+            ->where('facilities.category', "=",'cottage')
+            ->sum('bookings.facility_income');
+        
+        $totalRevenue = Booking::sum('facility_income');
+
+
+        $totalReservations = Booking::count();
+
+        $averageRevenue = $totalReservations > 0 ? $totalRevenue / $totalReservations : 0;
+        $monthlyRevenue = [];
+
+        foreach ($months as $month) {
+            $monthlyRevenue[] = Booking::sum(DB::raw("CASE WHEN MONTH(created_at) = $month THEN facility_income ELSE 0 END"));
+        }
+
+      return view('content.dashboard.dashboards-analytics', compact(
+          'reservations',
+          'payment',
+          'amount',
+          'amountReservation',
+          'monthlyData',
+          'selectedYear',
+          'availableYears',
+          'foodCount',
+          'facilitycount',
+          'ratingavg',
+          'customerSatisfaction',
+          'refundsData',
+          'roomData',
+          'cottageData',
+          'monthlyRevenue',
+          'averageRevenue',
+          'monthlyPartialData'
+      ));
+  }
+
+}

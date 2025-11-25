@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
+body, p, a, button {
+  font-family: 'Poppins', sans-serif;
+}
+
+.nav-hover-effect {
+  position: relative;
+  transition: all 0.2s ease;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  color: #333;
+  text-decoration: none;
+}
+
+.nav-hover-effect:hover {
+  background-color: #f5f5f5;
+  color: #365bec;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nav-hover-effect.active {
+  background-color: #365bec !important;
+  color: #fff !important;
+  font-weight: 600;
+  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+}

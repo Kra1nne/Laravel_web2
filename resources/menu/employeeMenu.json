@@ -1,0 +1,49 @@
+{
+  "menu": [
+    {
+      "url": "/dashboard",
+      "name": "Dashboards",
+      "icon": "menu-icon tf-icons ri-home-smile-line",
+      "slug": "dashboard-analytics"
+    },
+    {
+      "url": "/facilities",
+      "name": "Facilities",
+      "icon": "menu-icon tf-icons ri-box-3-line",
+      "slug": "product-facilities"
+    },
+    {
+      "url": "/promos",
+      "name": "Promos",
+      "icon": "menu-icon tf-icons ri-gift-line",
+      "slug": "promos-facilities"
+    },
+    {
+      "url": "/reservations",
+      "name": "Reservations",
+      "icon": "menu-icon tf-icons ri-list-view",
+      "slug": "reservation-list"
+    },
+    {
+      "url": "/foods",
+      "name": "Foods",
+      "icon": "menu-icon tf-icons ri-restaurant-2-line",
+      "slug": "food-menu"
+    },
+    {
+      "menuHeader": "Management"
+    },
+    {
+      "url": "/feedback",
+      "name": "Feedback",
+      "icon": "menu-icon tf-icons ri-chat-4-line",
+      "slug": "feedback-list"
+    },
+    {
+      "url": "/report",
+      "name": "Generate Report",
+      "icon": "menu-icon tf-icons ri-file-line",
+      "slug": "reports-page"
+    }
+  ]
+}
