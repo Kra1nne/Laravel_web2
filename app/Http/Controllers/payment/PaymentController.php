@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use App\Models\Facility;
+use App\Models\Log;
 
 class PaymentController extends Controller
 {
@@ -21,7 +22,18 @@ class PaymentController extends Controller
         // Store booking data temporarily
         session(['payment_data' => $request->all()]);
 
-        $amount = (int) ($request->input('total_amount') * 100 / 2); 
+        // Determine payment type
+        $paymentType = $request->input('payment_type'); // 'partial' or 'full'
+
+        // Calculate amount
+        $totalAmount = (int) $request->input('total_amount');
+        if ($paymentType === 'partial') {
+            $amount = (int) ($totalAmount * 100 / 2); 
+        } else {
+            $amount = $totalAmount * 100; 
+        }
+
+        // Get facility name
         $facilityName = Facility::where('id', $request->facility_id)->first();
         $name = $facilityName->name ?? "Cottages/Rooms";
 
@@ -34,7 +46,25 @@ class PaymentController extends Controller
 
         return redirect()->away($session["url"]);
     }
-    private function createCheckoutSession($amount, $name)
+
+    // new payment
+    public function fullpaid(Request $request){        
+        $paymantData = Payment::where('bookings_id', $request->id)->first();
+        $bookingData = Booking::where('id', $request->id)->first();
+        $facilityName = Facility::where('id', $bookingData->facilities_id)->first();
+        $name = $facilityName->name ?? "Cottages/Rooms";
+        $amount = $paymantData->amount * 100;
+        session(['data' => $request->id]);
+
+        $session = $this->createCheckoutSession_V2($amount, $name);
+
+        if ($session["status"] === "timeout" || $session["status"] === "error") {
+            return back()->with('payment_error', $session["message"]);
+        }
+
+        return redirect()->away($session["url"]);
+    }
+    private function createCheckoutSession_V2($amount, $name)
     {
         $curl = curl_init();
 
@@ -47,7 +77,7 @@ class PaymentController extends Controller
             CURLOPT_HTTPHEADER => [
                 "accept: application/json",
                 "content-type: application/json",
-                "authorization: Basic " . base64_encode(config('services.paymongo.secret'))
+                "authorization: Basic " . base64_encode(config('services.paymongo.secret') . ":")
             ],
             CURLOPT_POSTFIELDS => json_encode([
                 "data" => [
@@ -65,7 +95,107 @@ class PaymentController extends Controller
                         "send_email_receipt" => false,
                         "show_description" => true,
                         "show_line_items" => true,
-                        "description" => "Blue Oasis Partial Payment",
+                        "description" => "Blue Oasis Payment",
+                        "success_url" => route('reservation-paid.success'),
+                        "cancel_url" => route('user-reservation-list'),
+                    ]
+                ]
+            ]),
+        ]);
+
+        $response = curl_exec($curl);
+        $err = curl_error($curl); 
+        curl_close($curl);
+
+        if ($err) {
+            return [
+                "status" => "timeout",
+                "message" => "Payment gateway is slow or not responding."
+            ];
+        }
+
+        $decoded = json_decode($response, true);
+
+        if (!isset($decoded["data"]["attributes"]["checkout_url"])) {
+            return [
+                "status" => "error",
+                "message" => "Unable to generate checkout URL."
+            ];
+        }
+
+        return [
+            "status" => "ok",
+            "url" => $decoded["data"]["attributes"]["checkout_url"]
+        ];
+    }
+    public function fullyPaidSuccess(Request $request){
+        $data = session('data');
+        $id = (int)$data;
+
+        $booking = Booking::where('id', $id)->first();
+        $payment = Payment::where('bookings_id',  $id)->first();
+
+        $bookingsData = [
+            'status' => "Fully Paid",
+            'updated_at' => now()
+        ];
+        Booking::where('id', $id)->update($bookingsData);
+
+        $paymentData = [
+            'status' => "Fully Paid",
+            'updated_at' => now(),
+            'amount' => $booking->amount,
+        ];
+        Payment::where('id', $payment->id)->update($paymentData);
+        $logData = [
+            'user_id' => Auth::id(),
+            'action' => 'Update',
+            'table_name' => 'Bookings',
+            'description' => 'Fully Paid',
+            'ip_address' => request()->ip(),
+            'created_at' => now(),
+        ];
+        $logs = Log::insert($logData);
+
+        if($logs){
+            return redirect('/reservations-list')->with('payment_success', 'Successfully Paid');
+        }
+    }
+
+    // new payment
+
+    private function createCheckoutSession($amount, $name)
+    {
+        $curl = curl_init();
+
+        curl_setopt_array($curl, [
+            CURLOPT_URL => "https://api.paymongo.com/v1/checkout_sessions",
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_TIMEOUT => 8,
+            CURLOPT_CONNECTTIMEOUT => 4,
+            CURLOPT_HTTPHEADER => [
+                "accept: application/json",
+                "content-type: application/json",
+                "authorization: Basic " . base64_encode(config('services.paymongo.secret') . ":")
+            ],
+            CURLOPT_POSTFIELDS => json_encode([
+                "data" => [
+                    "attributes" => [
+                        "line_items" => [
+                            [
+                                "currency" => "PHP",
+                                "amount" => $amount,
+                                "description" => "Blue Oasis Booking Payment",
+                                "name" => $name,
+                                "quantity" => 1
+                            ]
+                        ],
+                        "payment_method_types" => ["gcash"],
+                        "send_email_receipt" => false,
+                        "show_description" => true,
+                        "show_line_items" => true,
+                        "description" => "Blue Oasis Payment",
                         "success_url" => route('payment.success'),
                         "cancel_url" => route('booking'),
                     ]
@@ -102,10 +232,21 @@ class PaymentController extends Controller
     {
         $data = session('payment_data');
 
+        $paymentType = $data['payment_type'] ?? 'partial'; 
+
+        $totalAmount = (float) $data['total_amount'];
+        if ($paymentType === 'partial') {
+            $paymentAmount = $totalAmount / 2;
+            $paymentStatus = 'Partial Payment';
+        } else {
+            $paymentAmount = $totalAmount;
+            $paymentStatus = 'Fully Paid';
+        }
+
         $booking = [
             'reserve' => 1,
             'walk_in' => 0,
-            'status' => 'Partial Payment',
+            'status' => $paymentStatus,
             'check_in' => $data['check_in'],
             'check_out' => $data['check_out'],
             'created_at' => now(),
@@ -138,8 +279,8 @@ class PaymentController extends Controller
         }
 
         $payment = [
-            'status' => 'Partial Payment',
-            'amount' => $data['total_amount'] / 2,
+            'status' => $paymentStatus,
+            'amount' => $paymentAmount,
             'created_at' => now(),
             'bookings_id' => $bookingID->id,
         ];
@@ -200,10 +341,21 @@ class PaymentController extends Controller
 
     public function paymentSuccessAdmin(Request $request)
     {
+        $paymentType = $request->payment_type ?? 'partial'; // fallback to partial
+
+        $totalAmount = (float) $request->total_amount;
+        if ($paymentType === 'partial') {
+            $paymentAmount = $totalAmount / 2;
+            $paymentStatus = 'Partial Payment';
+        } else {
+            $paymentAmount = $totalAmount;
+            $paymentStatus = 'Fully Paid';
+        }
+        
         $booking = [
             'reserve' => 1,
             'walk_in' => 1,
-            'status' => 'Partial Payment',
+            'status' => $paymentStatus,
             'check_in' => $request->check_in,
             'check_out' => $request->check_out,
             'created_at' => now(),
@@ -237,8 +389,8 @@ class PaymentController extends Controller
         }
 
         $payment = [
-            'status' => 'Partial Payment',
-            'amount' => $request->total_amount / 2,
+            'status' => $paymentStatus,
+            'amount' => $paymentAmount,
             'created_at' => now(),
             'bookings_id' => $bookingID->id,
         ];
@@ -246,93 +398,5 @@ class PaymentController extends Controller
 
         return redirect()->route('product-facilities')->with('show_modal', true)->with('booking_id', Crypt::encryptString($bookingID->id));
     }
-    // public function checkout(Request $request)
-    // {
-    //     $amount = (int) ($request->input('total_amount')); 
-    //     $paymongo = new Paymongo(config('services.paymongo.secret'));
-    //     $data = $request->all();
-
-    //     session(['payment_data' => $data]);
-
-    //     $paymentIntent = $paymongo->paymentIntent()->create([
-    //         'amount' => $amount / 2,
-    //         'payment_method_allowed' => ['gcash', 'card', 'grab_pay', 'paymaya'],
-    //         'currency' => 'PHP',
-    //         'description' => 'Booking Payment',
-    //     ]);
-
-    //     $paymentMethod = $paymongo->paymentMethod()->create([
-    //         'type' => 'gcash',
-    //         'details' => [
-    //             'redirect' => [
-    //                 'success' => route('payment.success'),
-    //                 'failed' => route('booking'),
-    //             ],
-    //         ],
-    //     ]);
-
-
-    //     $attached = $paymongo->paymentIntent()->attach(
-    //         $paymentIntent,
-    //         $paymentMethod->id,
-    //         route('payment.success')
-    //     );
-
-
-    //     if ($attached->next_action && isset($attached->next_action['redirect']['url'])) {
-    //         return redirect($attached->next_action['redirect']['url']);
-    //     } else {
-    //         return back()->with('error', 'Unable to initiate payment. Please try again.');
-    //     }
-    // }
-    // public function createCheckoutSession()
-    // {
-    //     $curl = curl_init();
-
-    //     curl_setopt_array($curl, [
-    //         CURLOPT_URL => "https://api.paymongo.com/v1/checkout_sessions",
-    //         CURLOPT_RETURNTRANSFER => true,
-    //         CURLOPT_CUSTOMREQUEST => "POST",
-    //         CURLOPT_HTTPHEADER => [
-    //             "accept: application/json",
-    //             "content-type: application/json",
-    //             "authorization: Basic c2tfdGVzdF9ldWFwbTJwdkNNQm0yVzQ3Q1VRbWhlR0g6"
-    //         ],
-    //         CURLOPT_POSTFIELDS => json_encode([
-    //             "data" => [
-    //                 "attributes" => [
-    //                     "line_items" => [
-    //                         [
-    //                             "currency" => "PHP",
-    //                             "amount" => 121131, 
-    //                             "description" => "BlueOasis Payment",
-    //                             "name" => "BlueOasis", 
-    //                             "quantity" => 1
-    //                         ]
-    //                     ],
-    //                     "payment_method_types" => ["gcash"],
-    //                     "send_email_receipt" => false,
-    //                     "show_description" => true,
-    //                     "show_line_items" => true,
-    //                     "description" => "dada"
-    //                 ]
-    //             ]
-    //         ]),
-    //     ]);
-
-    //     $response = curl_exec($curl);
-    //     $err = curl_error($curl);
-    //     curl_close($curl);
-
-    //     if ($err) {
-    //         return "cURL Error #:" . $err;
-    //     }
-
-    //     $decoded = json_decode($response, true);
-
-    //     $checkoutUrl = $decoded["data"]["attributes"]["checkout_url"] ?? null;
-
-    //     return $checkoutUrl; 
-    // }
     
 }

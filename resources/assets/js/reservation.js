@@ -1,3 +1,32 @@
+import CryptoJS from "crypto-js";
+$.ajaxSetup({
+    headers: {
+        'X-CSRF-TOKEN': $('input[name="_token"]').val()
+    }
+})
+
+const SECRET_KEY = import.meta.env.VITE_APP_ENCRYPT_KEY; 
+
+export function encryptNumber(number) {
+    if (typeof number !== "number") throw new Error("Input must be a number");
+
+    const text = number.toString();
+    const iv = CryptoJS.lib.WordArray.random(16);
+    const key = CryptoJS.enc.Utf8.parse(SECRET_KEY); 
+
+    const encrypted = CryptoJS.AES.encrypt(text, key, {
+        iv: iv,
+        mode: CryptoJS.mode.CBC,
+        padding: CryptoJS.pad.Pkcs7
+    });
+
+    const ivHex = iv.toString(CryptoJS.enc.Hex);
+    const ciphertextHex = encrypted.ciphertext.toString(CryptoJS.enc.Hex);
+
+    return ivHex + ":" + ciphertextHex;
+}
+
+
 function formatDate(date) {
   return date
     .toLocaleString('en-US', {
@@ -11,7 +40,42 @@ function formatDate(date) {
     .replace(',', '')
     .replace(/^([A-Za-z]+)\s/, '$1. ');
 }
+// error trapping
+function validateForm(fields) {
+  let valid = true;
 
+  // Loop through all fields to check if any are empty
+  fields.forEach(field => {
+    const input = document.getElementById(field.id);
+    const value = input.value.trim();
+    const errorMessages = [];
+
+    // Check for empty fields
+    if (!value) {
+      valid = false;
+      errorMessages.push(`${field.label} is required.`);
+    }
+
+    if (errorMessages.length > 0) {
+      input.classList.add('is-invalid'); // Add Bootstrap 'is-invalid' class
+      let errorMessageContainer = input.parentNode.querySelector('.invalid-feedback');
+      if (!errorMessageContainer) {
+        errorMessageContainer = document.createElement('div');
+        errorMessageContainer.classList.add('invalid-feedback');
+        input.parentNode.appendChild(errorMessageContainer);
+      }
+      errorMessageContainer.innerHTML = errorMessages.join('<br>'); // Display all errors for this field
+    } else {
+      input.classList.remove('is-invalid'); // Remove 'is-invalid' class if valid
+      let errorMessageContainer = input.parentNode.querySelector('.invalid-feedback');
+      if (errorMessageContainer) {
+        errorMessageContainer.remove(); // Remove error messages
+      }
+    }
+  });
+
+  return valid;
+}
 $(document).ready(function () {
   function displayPromos(reservations) {
     const $reservationList = $('#reservationList');
@@ -23,7 +87,7 @@ $(document).ready(function () {
     }
 
     reservations.forEach(reservation => {
-    
+      const fullname = reservation.name ?? reservation.firstname + (reservation.middlename ?? ' ') + reservation.lastname;
       const Options = `
         ${reservation.status != 'Fully Paid' && new Date(reservation.check_in) <= new Date() ? `
           <a class="dropdown-item DoneBtn" href="javascript:void(0);"
@@ -35,7 +99,32 @@ $(document).ready(function () {
           </a>
         ` : ''}
       `;
-      const fullname = reservation.name ?? reservation.firstname + (reservation.middlename ?? ' ') + reservation.lastname;
+      const Add = `
+        ${new Date(reservation.check_out) > new Date()? `
+          <a class="dropdown-item AddBtn" href="/reservations/add_food/${encryptNumber(reservation.id)}">
+            <i class="ri-restaurant-2-line me-1"></i> Add Foods
+          </a>
+          <a class="dropdown-item AddBtn" href="javascript:void(0);"  data-bs-toggle="modal" data-bs-target="#Extend"
+          data-id="${reservation.id}"
+          data-name=${fullname}
+          data-facility="${reservation.facilities_name} ${reservation.promos_name !== null ? ' - ' + reservation.promos_name : ''}"
+          data-payment="${Number(reservation.amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}"
+          data-start="${reservation.check_in}"
+          data-end="${reservation.check_out}"
+          data-price="${reservation.promos_price ?? reservation.facilities_price}"
+          data-category="${reservation.category}"
+          >
+            <i class="ri-time-line me-1"></i> Extend Time
+          </a>
+          <a class="dropdown-item AddGuest"
+            data-id="${reservation.id}"
+            href="javascript:void(0);"  data-bs-toggle="modal" data-bs-target="#GuestModal"
+          >
+          <i class="ri-user-line me-1"></i> Add Guest
+          </a>
+        ` : ''}
+      `;
+      
       const reservationRow = `
         <tr>
           <td>
@@ -52,6 +141,48 @@ $(document).ready(function () {
           </td>
           <td>
             ${formatDate(new Date(reservation.check_in))} - ${formatDate(new Date(reservation.check_out))}
+          </td>
+          <td>
+            <span class="badge rounded-pill 
+              ${(() => {
+                const now = new Date();
+                const checkIn = new Date(reservation.check_in);
+                const checkOut = new Date(reservation.check_out);
+
+                if (reservation.status === "Cancel") {
+                  return 'bg-label-danger';
+                } else if (now > checkOut) {
+                  return 'bg-label-secondary'; // Done
+                } else if (now >= checkIn && now <= checkOut) {
+                  return 'bg-label-primary'; // Ongoing
+                } else if (now < checkIn) {
+                  return 'bg-label-info'; // Incoming
+                } else if (reservation.status === "Partial Payment") {
+                  return 'bg-label-warning';
+                }
+                return 'bg-label-light';
+              })()}
+              me-1">
+              
+              ${(() => {
+                const now = new Date();
+                const checkIn = new Date(reservation.check_in);
+                const checkOut = new Date(reservation.check_out);
+
+                if (reservation.status === "Cancel") {
+                  return "Canceled";
+                } else if (now > checkOut) {
+                  return "Done";
+                } else if (now >= checkIn && now <= checkOut) {
+                  return "Ongoing";
+                } else if (now < checkIn) {
+                  return "Incoming";
+                } else if (reservation.status === "Partial Payment") {
+                  return "Partial Payment";
+                }
+                return "Unknown";
+              })()}
+            </span>
           </td>
           <td>
             <span class="badge rounded-pill ${reservation.status === "Partial Payment" ? 'bg-label-warning' : reservation.status === "Cancel" ? 'bg-label-danger' : 'bg-label-success'} me-1">${reservation.status}</span>
@@ -79,6 +210,7 @@ $(document).ready(function () {
                   <i class="ri-eye-line me-1"></i> View
                 </a>
                 ${Options}
+                ${Add}
           </td>
         </tr>
       `;
@@ -211,3 +343,197 @@ $(document).ready(function () {
     });
   });
 });
+
+
+
+// extension payment
+function calculateDays(checkIn, checkOut) { 
+    if (!checkIn || !checkOut) return 0;
+
+    const inDate = new Date(checkIn);
+    const outDate = new Date(checkOut);
+
+    const diffMs = outDate - inDate;
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    return diffDays;
+}
+
+function calculateHours(start, end) {
+    if (!start || !end) return 0;
+
+    const inDate = new Date(start);
+    const outDate = new Date(end);
+
+    const diffMs = outDate - inDate;
+    const diffHours = diffMs / (1000 * 60 * 60);
+    return diffHours;
+}
+
+function normalizeDate(dateStr) {
+    if (!dateStr) return null;
+
+    dateStr = dateStr.replace(" ", "T");
+
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dateStr)) {
+        dateStr += ":00";
+    }
+    return dateStr;
+}
+
+$(document).ready(function () {
+    $('body').on('click', '.AddBtn', function(){
+
+        const id = $(this).data('id');
+        const name = $(this).data('name');
+        const facility = $(this).data('facility');
+        const payment = $(this).data('payment');
+        const start = $(this).data('start');
+        const end = $(this).data('end');
+        const price = $(this).data('price');
+        const category = $(this).data('category');
+        
+        $('#id').val(id);
+        $('#name').val(name);
+        $('#facilities').val(facility);
+        $('#payment').val(payment);
+        $('#checkin').val(start);
+        $('#checkout').val(end);
+
+        $('body').on('click', '#Check', function(event) {
+
+            const fields = [
+                { id: 'extend', label: 'New Date' },
+            ];
+            const isValid = validateForm(fields);
+
+            if (!isValid) {
+                event.preventDefault();
+                return;
+            }
+
+            const extendTime = $('#extend').val();
+
+            if (category === "room") {
+                const days = calculateDays(normalizeDate(end), normalizeDate(extendTime));
+                console.log(days);
+                const amount = price * days;
+                $('#additional').val(amount);
+            }
+
+            else if (category === "cottage") {
+                const hours = calculateHours(normalizeDate(end), normalizeDate(extendTime));
+                console.log(hours);
+                const amount = hours * 100; 
+                $('#additional').val(amount);
+            }
+
+        });
+    });
+});
+
+$(document).ready(function() {
+    $('body').on('click', '#SaveExtend', function() {
+
+      const fields = [
+          { id: 'extend', label: 'New Date' },
+          { id: 'additional', label: 'Additional Payment'}
+      ];
+      const isValid = validateForm(fields);
+      
+      if (!isValid) {
+          event.preventDefault();
+          return;
+      }
+
+      $.ajax({
+        type: 'POST',
+        url: '/reservations/extend',
+        cache: false,
+        data: $('#ExtendData').serialize(),
+        dataType: 'json',
+        beforeSend: function () {
+          $('#Extend').modal('hide');
+          $('.preloader').show();
+        },
+        success: function (data) {
+          $('.preloader').hide();
+          if (data.Error == 1) {
+            Swal.fire('Error!', data.Message, 'error');
+          } else if (data.Error == 0) {
+            Swal.fire({
+              position: 'center',
+              icon: 'success',
+              title: 'Saved!',
+              text: data.Message,
+              showConfirmButton: true,
+              confirmButtonText: 'OK'
+            }).then(result => {
+              location.reload();
+            });
+          }
+        },
+        error: function () {
+          $('.preloader').hide();
+          Swal.fire('Error!', 'Something went wrong, please try again.', 'error');
+        }
+      });
+
+    });
+  });
+
+  $(document).ready(function() {
+    $('body').on('click', '.AddGuest', function() {
+        const id = $(this).data('id');
+
+        $('#reservation_id').val(id);
+    })
+    $('body').on('click', '#AddGuestSubmit', function() {
+
+      const fields = [
+          { id: 'guest', label: 'Number of Guest' },
+      ];
+      const isValid = validateForm(fields);
+      
+      if (!isValid) {
+          event.preventDefault();
+          return;
+      }
+
+      $.ajax({
+        type: 'POST',
+        url: '/reservations/guest',
+        cache: false,
+        data: $('#GuestData').serialize(),
+        dataType: 'json',
+        beforeSend: function () {
+          $('#GuestModal').modal('hide');
+          $('.preloader').show();
+        },
+        success: function (data) {
+          $('.preloader').hide();
+          if (data.Error == 1) {
+            Swal.fire('Error!', data.Message, 'error');
+          } else if (data.Error == 0) {
+            Swal.fire({
+              position: 'center',
+              icon: 'success',
+              title: 'Saved!',
+              text: data.Message,
+              showConfirmButton: true,
+              confirmButtonText: 'OK'
+            }).then(result => {
+              location.reload();
+            });
+          }
+        },
+        error: function () {
+          $('.preloader').hide();
+          Swal.fire('Error!', 'Something went wrong, please try again.', 'error');
+        }
+      });
+
+    });
+  });
+
+
+  

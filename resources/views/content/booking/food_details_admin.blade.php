@@ -1,4 +1,4 @@
-@extends('layouts/homeLayout')
+@extends('layouts/blankLayout')
 
 @section('title', 'Booking')
 
@@ -14,7 +14,7 @@
         <nav aria-label="breadcrumb" class="mt-8">
           <ol class="breadcrumb breadcrumb-style2">
             <li class="breadcrumb-item">
-              <a href="{{ route('product-facilities') }}">Facilities</a>
+              <a href="{{ url()->previous() }}">Bookigs</a>
             </li>
             <li class="breadcrumb-item active">Foods</li>
           </ol>
@@ -138,7 +138,14 @@
               <input type="hidden" name="check_in" id="check_in" value="{{ $bookingDetails['checkin'] }}">
               <input type="hidden" name="check_out" id="check_out" value="{{ $bookingDetails['checkout'] }}">
               <input type="hidden" name="guest_count" id="guest_count" value="{{ $bookingDetails['number_of_guests'] }}">
-              <button class="btn btn-success">Check out</button>
+              <div class="d-flex gap-3">
+                  <button type="submit" name="payment_type" value="partial" class="btn btn-success">
+                      Partial Payment
+                  </button>
+                  <button type="submit" name="payment_type" value="full" class="btn btn-success">
+                      Full Payment
+                  </button>
+              </div>
             </form>
           </div>
         </div>

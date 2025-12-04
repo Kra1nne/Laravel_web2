@@ -85,12 +85,6 @@
       <span>Service Fee</span>
       <span style="margin-top: -14px">50.00</span>
     </div>
-    @if($Details['status'] == "Partial Payment" || $Details['status'] == "Cancel")
-        <div class="line total">
-          <span>PARTIAL PAYMENT</span>
-          <span style="margin-top: -14px">{{ number_format(($Details['total_amount'] / 2), 2) }}</span>
-        </div>
-    @endif
     <div class="line total">
       <span>TOTAL AMOUNT</span>
       <span style="margin-top: -14px">{{ number_format($Details['total_amount'], 2) }}</span>

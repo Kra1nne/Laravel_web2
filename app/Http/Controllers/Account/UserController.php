@@ -118,6 +118,7 @@ class UserController extends Controller
       ->select('logs.*', 'person.firstname', 'person.middlename', 'person.lastname', 'users.email')
       ->orderBy('logs.id', 'DESC')
       ->get();
+      
     return view('content.logs.logs', compact('logs'));
   }
 }

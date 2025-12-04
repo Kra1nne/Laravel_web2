@@ -12,7 +12,7 @@ $(document).ready(function () {
     logs.forEach(log => {
       const logRow = `
         <tr>
-          <td><span>${log.firstname} ${log.lastname}</span></td>
+          <td><span>${log.firstname ?? ""} ${log.lastname ?? ""}</span></td>
           <td>${log.action}</td>
           <td>${log.table_name}</td>
           <td>${log.description}</td>

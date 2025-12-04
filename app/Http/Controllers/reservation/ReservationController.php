@@ -11,6 +11,9 @@ use App\Models\Log;
 use App\Models\Rating;
 use App\Models\Facility;
 use App\Models\Payment;
+use App\Models\Food;
+use App\Models\FoodBooking;
+use DateTime;
 
 class ReservationController extends Controller
 {
@@ -35,14 +38,21 @@ class ReservationController extends Controller
                         $join->on('promos.facilities_id', '=', 'facilities.id')
                             ->whereColumn('promos.id', 'bookings.promos_id');
                     })
+                    ->orderByRaw("
+                          CASE 
+                              WHEN NOW() BETWEEN bookings.check_in AND bookings.check_out THEN 1
+                              WHEN bookings.check_in > NOW() THEN 2
+                              ELSE 3
+                          END ASC
+                      ")
                     ->orderBy('bookings.created_at', 'DESC')
                     ->distinct('bookings.id')
-                    ->select('bookings.*', 'facilities.name as facilities_name', 'promos.name as promos_name', 'promos.price as promos_price', 'facilities.price as facilities_price','person.firstname', 'person.middlename', 'person.lastname', 'rating.rating as rate', 'payments.amount as payment_amount', 'payments.id as payment_id')
+                    ->select('bookings.*', 'facilities.name as facilities_name', 'promos.name as promos_name', 'promos.price as promos_price', 'facilities.price as facilities_price','person.firstname', 'person.middlename', 'person.lastname', 'rating.rating as rate', 'payments.amount as payment_amount', 'payments.id as payment_id', 'facilities.category as category')
                     ->get()->map(function ($reservation) {
                           $reservation->encrypted_id = Crypt::encryptString($reservation->id);
                           return $reservation;
                       });
-
+                      
       return view('content.reservation.reservation-list', compact('reservations', 'facilities'));
     }
 
@@ -57,6 +67,13 @@ class ReservationController extends Controller
                         $join->on('promos.facilities_id', '=', 'facilities.id')
                             ->whereColumn('promos.id', 'bookings.promos_id');
                     })
+                    ->orderByRaw("
+                          CASE 
+                              WHEN NOW() BETWEEN bookings.check_in AND bookings.check_out THEN 1
+                              WHEN bookings.check_in > NOW() THEN 2
+                              ELSE 3
+                          END ASC
+                      ")
                     ->orderBy('bookings.created_at', 'DESC')
                     ->where('users.id', '=', Auth::id())
                     ->distinct('bookings.id')
@@ -65,7 +82,7 @@ class ReservationController extends Controller
                           $reservation->encrypted_id = Crypt::encryptString($reservation->id);
                           return $reservation;
                       });
-
+      
       return view('content.reservation.user_reservation-list', compact('reservations'));
     }
     public function rating(Request $request){
@@ -210,5 +227,223 @@ class ReservationController extends Controller
       $resultLogs = Log::insert($logData);
 
       return response()->json(['Error' => 0, 'Message' => 'Successfully update your reservation.']);
+    }
+    public function ExtendTime(Request $request)
+    {
+      $id = $request->id;
+      $payment = Payment::where('bookings_id',  $id)->first();
+      $booking = Booking::where('id', $id)->first();
+
+      $dataPayment = [
+        'amount' => $request->NewNumber + $payment->amount,
+        'updated_at' => now()
+      ];
+      $dataBooking = [
+        'check_out' => $request->extend,
+        'amount' => $request->NewNumber + $booking->amount,
+        'updated_at' => now()
+      ];
+
+      $logData = [
+            'user_id' => Auth::id(),
+            'action' => 'Update',
+            'table_name' => 'Bookings',
+            'description' => 'Extend Time/Date',
+            'ip_address' => request()->ip(),
+            'created_at' => now(),
+        ];
+      $resultBooking = Booking::where('id', $id)->update($dataBooking);
+      $resultPayment = Payment::where('id', $payment->id)->update($dataPayment);
+      Log::insert($logData);
+
+      if($resultPayment && $resultBooking){
+        return response()->json(['Error' => 0, 'Message' => 'Successfully extend the Time/Date of your reservation.']);
+      }
+    }
+    public function AddFood($id){
+
+      $decryptedId = $this->decryptNumber($id);
+      $bookings = Booking::with('foods')
+          ->leftJoin('facilities', 'facilities.id', '=', 'bookings.facilities_id')
+          ->leftJoin('users', 'users.id', '=', 'bookings.users_id')
+          ->leftJoin('payments', 'payments.bookings_id', '=', 'bookings.id')
+          ->leftJoin('person', 'person.id', '=', 'users.person_id')
+          ->where('bookings.id', '=', $decryptedId)
+          ->get();
+
+      
+      $bookings->each(function($booking) {
+          $check_in = new DateTime($booking->check_in);
+          $check_out = new DateTime($booking->check_out);
+
+          $interval = $check_in->diff($check_out);
+
+          $days = $interval->days;
+          if ($interval->h > 0 || $interval->i > 0) {
+              $days += 1;
+          }
+
+          $booking->day = $days;
+      });
+
+      $booking = $bookings->first();
+      
+      $food_list = Food::leftjoin('food_bookings', 'foods.id', '=', 'food_bookings.foods_id')
+        ->leftjoin('bookings', 'food_bookings.bookings_id', '=', 'bookings.id')
+        ->where('bookings.id', '=', $decryptedId)
+        ->select('foods.*', 'bookings.*', 'food_bookings.*', 'foods.name as food_name', 'bookings.id as bookings_id')
+        ->get();
+           
+      $foods = Food::with('picture')
+        ->whereNull('deleted_at')
+        ->get();
+      
+      return view('content.food.add-food', compact('foods', 'booking', 'food_list'));
+    }
+    public function decryptNumber($input)
+    {
+        $secretKey = env('APP_ENCRYPT_KEY'); // 32 chars
+
+        $parts = explode(':', $input);
+        if (count($parts) !== 2) {
+            throw new \Exception("Invalid encrypted input format");
+        }
+
+        list($ivHex, $ciphertextHex) = $parts;
+
+        $iv = hex2bin($ivHex);
+        $ciphertext = hex2bin($ciphertextHex);
+
+        $plaintext = openssl_decrypt(
+            $ciphertext,
+            'AES-256-CBC',
+            $secretKey,
+            OPENSSL_RAW_DATA,
+            $iv
+        );
+
+        if ($plaintext === false) {
+            throw new \Exception("Decryption failed");
+        }
+
+        if (!is_numeric($plaintext)) {
+            throw new \Exception("Decrypted value is not numeric");
+        }
+
+        return $plaintext + 0;
+    }
+    public function AddFoodProcess(Request $request)
+    {
+      $id_booking = $request->bookings_id;
+      $booking = Booking::where('id', $id_booking)->first();
+      $payment = Payment::where('bookings_id',  $id_booking)->first();
+      // bookings_id,food_id, food_quantity, total_amount
+
+      $foodIDs = $request->food_id ?? [];
+      $foodQuantities = $request->food_quantity ?? [];
+
+      if (is_string($foodIDs)) {
+          $foodIDs = explode(',', $foodIDs);
+      }
+      if (is_string($foodQuantities)) {
+          $foodQuantities = explode(',', $foodQuantities);
+      }
+
+      foreach ($foodIDs as $index => $id) {
+          FoodBooking::insert([
+              'bookings_id' => $id_booking,
+              'foods_id' => $id,
+              'quantity' => $foodQuantities[$index] ?? 1,
+              'created_at' => now(),
+          ]);
+      }
+
+      $dataBooking = [
+        'amount' => $booking->amount + $request->total_amount,
+        'updated_at' => now()
+      ];
+      $dataPayment = [
+        'amount' => $payment->amount + $request->total_amount,
+        'updated_at' => now()
+      ];
+
+      $logData = [
+          'user_id' => Auth::id(),
+          'action' => 'Update',
+          'table_name' => 'Bookings',
+          'description' => 'Extend Foods',
+          'ip_address' => request()->ip(),
+          'created_at' => now(),
+      ];
+      $resultBooking = Booking::where('id', $booking->id)->update($dataBooking);
+      $resultPayment = Payment::where('id', $payment->id)->update($dataPayment);
+      Log::insert($logData);
+      if($resultPayment && $resultPayment)
+      {
+        return redirect('/reservations')->with('payment_success', 'Successfully Paid');
+      }
+    }
+    public function AddGuest(Request $request){
+
+      $booking = Booking::where('id', $request->reservation_id)->first();
+      $payment = Payment::where('bookings_id',  $request->reservation_id)->first();
+
+      $facilities = Facility::leftjoin('promos', 'promos.facilities_id', '=', 'facilities.id')
+                            ->where('facilities.id', '=', $booking->facilities_id)
+                            ->select('promos.*', 'facilities.*', 'promos.max_person as promo_max')
+                            ->first();
+
+      $amount = $booking->amount;
+      $Additional = 0;
+      $over = 0;
+      $isTrue = false;
+      $totalGuest = 0;
+
+      $totalGuest = $booking->guest + $request->guest;
+      $limitGuest = $facilities->promo_max ?? $facilities->max_person;
+
+      if($booking->guest > $limitGuest){
+        $over = $booking->guest - $limitGuest;
+        $isTrue = true;
+      }
+
+      if($totalGuest >  $limitGuest){
+        $Additional = $totalGuest - $limitGuest; 
+
+        if($isTrue){
+          $Additional -= $over;
+        }
+
+        $addAmount = $Additional * 150;
+        $amount += $addAmount;
+
+        $dataPayment = [
+          'amount' => $amount,
+          'updated_at' => now(),
+        ];
+       
+        $resultPayment = Payment::where('id', $payment->id)->update($dataPayment);
+      }
+      
+      $dataBooking = [
+        'amount' => $amount,
+        'guest' => $booking->guest + $request->guest,
+        'updated_at' => now()
+      ];
+
+      $logData = [
+          'user_id' => Auth::id(),
+          'action' => 'Update',
+          'table_name' => 'Bookings',
+          'description' => 'Add new Guest',
+          'ip_address' => request()->ip(),
+          'created_at' => now(),
+      ];
+      $resultBooking = Booking::where('id', $booking->id)->update($dataBooking);
+      Log::insert($logData);
+
+      if($resultBooking){
+        return response()->json(['Error' => 0, 'Message' => 'Successfully addedd a new guest.']);
+      }
     }
 }

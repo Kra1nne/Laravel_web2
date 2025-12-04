@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\pages\MiscError;
 use App\Http\Controllers\dashboard\Analytics;
@@ -23,6 +22,7 @@ use App\Http\Controllers\reservation\ReservationController;
 use App\Http\Controllers\authentications\ForgotPasswordBasic;
 use App\Http\Controllers\report\ReportControllers;
 use App\Http\Controllers\evaluation\EvaluationControllers;
+use App\Http\Controllers\CalendarController;
 
 Route::get('/', [LandingPageController::class, 'index'])->name('home')->middleware(['throttle:web']);
 Route::get('/pricing', [PricingController::class, 'index'])->name('pricing')->middleware(['throttle:web']);
@@ -36,6 +36,8 @@ Route::get('/reservations-list', [ReservationController::class, 'userReservation
 Route::post('/reservations-list/rating', [ReservationController::class, 'rating'])->name('reservation-rating')->middleware('auth');
 Route::post('/reservations-list/cancel', [ReservationController::class, 'cancel'])->name('reservation-cancel')->middleware('auth');
 Route::post('/reservations-list/update', [ReservationController::class, 'updateReservation'])->name('reservation-update')->middleware('auth');
+Route::post('/reservations-list/paid', [PaymentController::class, 'fullpaid'])->name('reservation-paid')->middleware('auth');
+Route::get('/reservations-list/success', [PaymentController::class, 'fullyPaidSuccess'])->name('reservation-paid.success')->middleware('auth');
 
 Route::get('/booking/generate-pdf', [PaymentController::class, 'displayPDF'])->name('generatePDF')->middleware(['auth']);
 
@@ -97,6 +99,13 @@ Route::middleware(['auth', 'role:Admin,Employee', 'throttle:web'])->group(functi
   Route::get('/reservations', [ReservationController::class, 'index'])->name('reservation-list');
   Route::post('/reservations/done', [ReservationController::class, 'done'])->name('reservation-done');
 
+  Route::post('/reservations/extend', [ReservationController::class, 'ExtendTime'])->name('reservation-extend');
+  Route::get('/reservations/add_food/{id}', [ReservationController::class, 'AddFood'])->name('reservation-add-food');
+  Route::post('/reservations/add_food/process', [ReservationController::class, 'AddFoodProcess'])->name('reservation-add-food-process');
+
+  Route::post('/reservations/guest', [ReservationController::class, 'AddGuest'])->name('reservation-add-guest');
+
+  Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar-list');
   Route::middleware(['role:Admin'])->group(function () {
 
     Route::get('/user', [UserController::class, 'index'])->name('user-accounts');
@@ -106,6 +115,7 @@ Route::middleware(['auth', 'role:Admin,Employee', 'throttle:web'])->group(functi
     Route::get('/user', [UserController::class, 'index'])->name('user-accounts');
 
     Route::get('/logs', [UserController::class, 'logs'])->name('user-logs');
+    
 
     Route::get('/evaluation', [EvaluationControllers::class, 'display'])->name('evaluate-display');
   });

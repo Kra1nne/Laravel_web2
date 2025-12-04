@@ -33,7 +33,7 @@ $(document).ready(function () {
           data-category="${reservation.fac_category}"
           data-facilities_id="${reservation.facilities_id}"
           >
-            <i class="ri-edit-2-line me-1 text-primary"></i> Update
+            <i class="ri-edit-2-line me-1 text-warning"></i> Update
           </a>
           <a class="dropdown-item CancelBtn" href="javascript:void(0);"
           data-id="${reservation.id}"
@@ -41,6 +41,14 @@ $(document).ready(function () {
           >
             <i class="ri-close-circle-line me-1 text-danger"></i> Cancel
           </a>
+          <form class="d-inline fully-paid-form" method="POST" action="${fullpaidRoute}">
+              <input type="hidden" name="_token" value="${csrfToken}">
+              <input type="hidden" name="id" value="${reservation.id}">
+              <button type="submit" class="dropdown-item" title="Mark as Fully Paid">
+                  <i class="ri-bill-line me-1 text-success"></i> Fully Paid
+              </button>
+          </form>
+
         ` : ''}
       `;
       const reservationRow = `
@@ -74,11 +82,11 @@ $(document).ready(function () {
               <div>
                 <div class="dropdown">
                   <a class="btn btn-sm ${new Date(reservation.check_out) > new Date() ? 'btn-outline-gray' : 'btn-outline-warning'} rating ${reservation.rate != null ? 'text-warning' : 'ratings'}"
-                    ${new Date(reservation.check_out) < new Date() && reservation.rating == null && reservation.status != "Cancel" ? 'data-bs-toggle="modal" data-bs-target="#AddRating"' : ''}
+                    ${new Date(reservation.check_out) < new Date() && reservation.rate == null && reservation.status != "Cancel" ? 'data-bs-toggle="modal" data-bs-target="#AddRating"' : ''}
                     href="javascript:void(0);"
                     data-bookings_id="${reservation.id}"
                     data-facilities_id="${reservation.facilities_id}">
-                    <i class="ri-star-line me-1"></i> ${reservation.rate != null ? 'Rated' : 'Rate'}
+                    <i class="ri-star-line me-1"></i> ${reservation.rate != null ? 'Done' : 'Rate'}
                   </a>
                   <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-more-2-line"></i></button>
                   <div class="dropdown-menu">
@@ -98,7 +106,7 @@ $(document).ready(function () {
                       data-status="${reservation.status}"
                       data-name="${reservation.name}"
                       >
-                      <i class="ri-eye-line me-1 text-success"></i> View
+                      <i class="ri-eye-line me-1 text-primary"></i> View
                     </a>
                     ${Options}
                   </div>

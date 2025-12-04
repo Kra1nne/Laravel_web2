@@ -25,7 +25,8 @@
           <th>Amount</th>
           <th>Payment</th>
           <th>Schedule</th>
-          <th>Status</th>
+          <th>Reservation Status</th>
+          <th>Payment Status</th>
           <th>Action</th>
         </tr>
       </thead>
@@ -133,7 +134,106 @@
     </div>
   </div>
 </div>
+<div class="modal fade" id="Extend" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header">
+        <h5 class="modal-title text-center w-100">Extend</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="ExtendData" >
+          @csrf
+          <input type="hidden" id="id" name="id">
+          <div class="row mb-4">
+            <div class="col">
+              <label for="name" class="form-label">Name</label>
+              <input type="text" name="name" id="name" class="form-control" disabled>
+            </div>
+          </div>
+          <div class="row mb-4">
+            <div class="col">
+              <label for="facilities" class="form-label">Facilities Name</label>
+              <input type="text" name="facilities" id="facilities" class="form-control" disabled>
+            </div>
+          </div>
+          <div class="row mb-4">
+            <div class="col">
+              <label for="payment" class="form-label">Payment</label>
+              <input type="text" name="payment" id="payment" class="form-control" disabled>
+            </div>
+          </div>
+          <div class="row mb-4">
+            <div class="col">
+              <label for="checkin" class="form-label">Start Date</label>
+              <input type="datetime-local" name="checkin" id="checkin" class="form-control" disabled>
+            </div>
+          </div>
+          <div class="row mb-4">
+            <div class="col">
+              <label for="checkout" class="form-label">End Date</label>
+              <input type="datetime-local" name="checkout" id="checkout" class="form-control" disabled>
+            </div>
+          </div>
+          <div class="row mb-4">
+            <div class="col">
+              <label for="extend" class="form-label">Extend Date</label>
+              <input type="datetime-local" name="extend" id="extend" class="form-control">
+            </div>
+          </div>
+          <div class="row mb-4">
+            <div class="col">
+              <label for="additional" class="form-label">Additional Payment</label>
+              <input type="number" name="NewNumber" id="additional" class="form-control" readonly>
+            </div>
+          </div>
+           <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="Check">Check Price</button>
+            <button type="button" class="btn btn-primary" id="SaveExtend">Apply</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="GuestModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header">
+        <h5 class="modal-title text-center w-100">Add Guest</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="GuestData" >
+          @csrf
+          <input type="hidden" id="reservation_id" name="reservation_id">
+          <div class="row mb-4">
+            <div class="col">
+              <label for="guest" class="form-label">Guest</label>
+              <input type="number" name="guest" id="guest" class="form-control" placeholder="Enter the number of guest you want to add....">
+            </div>
+          </div>
+           <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="AddGuestSubmit">Add Guest</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
   window.reservations = @json($reservations);
 </script>
+@if(session('payment_success'))
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    Swal.fire({
+        icon: 'success',
+        title: 'Payment Sucess',
+        text: '{{ session("payment_success") }}',
+        confirmButtonText: 'Okay',
+    });
+});
+</script>
+@endif
 @endsection

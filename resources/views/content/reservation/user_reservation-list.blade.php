@@ -214,4 +214,33 @@
 <script>
   window.reservations = @json($reservations);
 </script>
+<script>
+    // Laravel route and CSRF token passed to JS
+    const fullpaidRoute = '{{ route("reservation-paid") }}';
+    const csrfToken = '{{ csrf_token() }}';
+</script>
+@if(session('payment_error'))
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    Swal.fire({
+        icon: 'error',
+        title: 'Payment Error',
+        text: '{{ session("payment_error") }}',
+        confirmButtonText: 'Okay',
+    });
+});
+</script>
+@endif
+@if(session('payment_success'))
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    Swal.fire({
+        icon: 'success',
+        title: 'Payment Success',
+        text: '{{ session("payment_success") }}',
+        confirmButtonText: 'Okay',
+    });
+});
+</script>
+@endif
 @endsection

@@ -1,4 +1,4 @@
-@extends('layouts/homeLayout')
+@extends('layouts/blankLayout')
 
 @section('title', 'Booking')
 
@@ -11,6 +11,7 @@
 @endsection
 
 @section('content')
+
 <section class="min-vh-100 bg-white" id="details">
   <div class="container" style="padding-top: 90px;">
     <div class="row">
@@ -98,13 +99,13 @@
                       @if ($venue->category == "room")
                            <div class="col mb-4">
                             <div class="form-floating form-floating-outline">
-                              <input class="form-control" {{ $venue->category == "cottage" ? 'type=datetime-local' : 'type=date' }} id="checkin-date"  />
+                              <input class="form-control" type="datetime-local" id="checkin-date"  />
                               <label for="checkin-date">CHECK-IN</label>
                             </div>
                           </div>
                           <div class="col mb-4">
                             <div class="form-floating form-floating-outline">
-                              <input class="form-control" {{ $venue->category == "cottage" ? 'type=datetime-local' : 'type=date' }} id="checkout-date"  />
+                              <input class="form-control" type="datetime-local" id="checkout-date"  />
                               <label for="checkout-date">CHECK-OUT</label>
                             </div>
                           </div>

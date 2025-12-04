@@ -82,6 +82,7 @@
         </div>
         </div>
         <div class="row justify-content-between mt-5">
+           <p class="text-gray">Note: The time displayed represents the check out time of the guest.</p>
           <div class="col-md-6 col-lg-6 mb-4 d-flex align-items-stretch">
             <div id="calendar" style="width: 100%; height: 500px;"></div>
           </div>
@@ -98,13 +99,13 @@
                       @if ($venue->category == "room")
                            <div class="col mb-4">
                             <div class="form-floating form-floating-outline">
-                              <input class="form-control" {{ $venue->category == "cottage" ? 'type=datetime-local' : 'type=date' }} id="checkin-date"  />
+                              <input class="form-control" type="datetime-local" id="checkin-date"  />
                               <label for="checkin-date">CHECK-IN</label>
                             </div>
                           </div>
                           <div class="col mb-4">
                             <div class="form-floating form-floating-outline">
-                              <input class="form-control" {{ $venue->category == "cottage" ? 'type=datetime-local' : 'type=date' }} id="checkout-date"  />
+                              <input class="form-control" type="datetime-local" id="checkout-date"  />
                               <label for="checkout-date">CHECK-OUT</label>
                             </div>
                           </div>
@@ -264,36 +265,7 @@
               <span id="total_amount" class="text-primary fw-bold"></span>
             </h5>
           </div>
-
-          <!-- Payment Methods -->
-          {{-- <div class="mb-3">
-            <h6>Payment Method</h6>
-            <div class="list-group">
-              <label class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                  <input type="radio" name="payment" value="card" class="form-check-input me-2">
-                  Card (Visa / MasterCard / Amex)
-                </div>
-                <img src="https://img.icons8.com/color/48/000000/visa.png" height="24">
-              </label>
-
-              <label class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                  <input type="radio" name="payment" value="paypal" class="form-check-input me-2">
-                  PayPal
-                </div>
-                <img src="https://img.icons8.com/color/48/000000/paypal.png" height="24">
-              </label>
-
-              <label class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                  <input type="radio" name="payment" value="gcash" class="form-check-input me-2">
-                  GCash
-                </div>
-                <img src="{{ asset('assets/img/brands/gcash.png') }}" height="24">
-              </label>
-            </div>
-          </div> --}}
+          
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
             <button type="submit" class="btn btn-primary" id="SaveOrder">Confirm Booking</button>
@@ -303,7 +275,17 @@
     </div>
   </div>
 </div>
-
+<div class="modal fade" id="reservationModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reservation Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="reservationList"></div>
+    </div>
+  </div>
+</div>
 
 <script>
   window.venue = @json($venue);

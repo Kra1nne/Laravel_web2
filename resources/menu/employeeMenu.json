@@ -19,16 +19,22 @@
       "slug": "promos-facilities"
     },
     {
+      "url": "/foods",
+      "name": "Foods",
+      "icon": "menu-icon tf-icons ri-restaurant-2-line",
+      "slug": "food-menu"
+    },
+    {
       "url": "/reservations",
       "name": "Reservations",
       "icon": "menu-icon tf-icons ri-list-view",
       "slug": "reservation-list"
     },
     {
-      "url": "/foods",
-      "name": "Foods",
-      "icon": "menu-icon tf-icons ri-restaurant-2-line",
-      "slug": "food-menu"
+      "url": "/calendar",
+      "name": "Calendar",
+      "icon": "menu-icon tf-icons ri-calendar-schedule-line",
+      "slug": "calendar-list"
     },
     {
       "menuHeader": "Management"

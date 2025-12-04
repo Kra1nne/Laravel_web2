@@ -2,10 +2,10 @@
   <nav class="navbar navbar-light fixed-top bg-transparent">
     <div class="container">
       <!-- Logo / Brand -->
-      <a class="navbar-brand" href="{{ url('/') }}">
+      <a class="navbar-brand" > <!-- href="{{ url('/') }}" -->
         <span class="app-brand-logo demo">@include('_partials.macros', ["height" => 80])</span>
       </a>
-
+      
       <!-- Toggler -->
       <button class="navbar-toggler navbar-toggler-md bg-transparent border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
         @if(Auth::check())

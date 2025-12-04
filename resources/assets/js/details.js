@@ -57,20 +57,32 @@ $(document).ready(function () {
 
   function updatePriceDisplay() {
     const guestCount = Number($('#guest').val()) || 1;
+
+    // Start from base venue price
     let basePrice = facilitydetails.price;
     let maxPerson = Number(facilitydetails.max_person) || 0;
     let additionalPrice = Number(facilitydetails.additional_price) || 0;
 
+    // Apply promo override if any
     if (selectedPromo && selectedPromo.price) {
-      basePrice = selectedPromo.price;
-      maxPerson = Number(selectedPromo.max_person) || maxPerson;
-      additionalPrice = Number(selectedPromo.additional_price) || additionalPrice;
+        basePrice = selectedPromo.price;
+        maxPerson = Number(selectedPromo.max_person) || maxPerson;
+        additionalPrice = Number(selectedPromo.additional_price) || additionalPrice;
     }
 
-    const total = calculateTotalPrice(basePrice, guestCount, maxPerson, additionalPrice);
+    // Apply guest count logic
+    let total = calculateTotalPrice(basePrice, guestCount, maxPerson, additionalPrice);
+
+    // 🔥 Add ₱500 whole-day fee IF selected
+    let selectedTime = $('.cottage-btn.bg-label-primary').text().trim();
+    if (facilitydetails.category === 'cottage' && selectedTime === "5:00 AM - 10:00 PM") {
+        total += 500;
+    }
+
+    // Output
     $('#price').text(formatPrice(total));
     $('#venue_price').val(total);
-  }
+}
 
   // Promo button selection
   $('.promo-btn').on('click', function () {
@@ -95,6 +107,7 @@ $(document).ready(function () {
         // Remove active class from all, add to clicked
         $('.cottage-btn').removeClass('bg-label-primary').addClass('bg-label-gray');
         $(this).removeClass('bg-label-gray').addClass('bg-label-primary');
+        $('#guest').val("");
 
         // Get selected date
         const date = $('#date').val();
@@ -115,6 +128,16 @@ $(document).ready(function () {
           return `${dateStr}T${hour.toString().padStart(2, '0')}:${minute}`;
         }
 
+        let selectedTime = $(this).text().trim();
+        let basePrice = facilitydetails.price;
+
+        if (selectedTime === "5:00 AM - 10:00 PM") {
+            basePrice += 500;
+        }
+
+        // update UI price and hidden input
+        $('#price').text(formatPrice(basePrice));
+        $('#venue_price').val(basePrice);
         // Set check-in and check-out values
         $('#checkin-date').val(formatDateTime(date, start));
         $('#checkout-date').val(formatDateTime(date, end));
@@ -149,22 +172,33 @@ $(document).ready(function () {
     return selected >= today;
   }
   function calculateDays(checkIn, checkOut) {
-    if (checkIn && checkOut) {
-      let inDate = new Date(checkIn);
-      let outDate = new Date(checkOut);
+      if (!checkIn || !checkOut) return 0;
 
-      let diffMs = outDate - inDate;
-      let diffDays = diffMs / (1000 * 60 * 60 * 24);
+      const inDate = new Date(checkIn);
+      const outDate = new Date(checkOut);
 
-      $('#time-in').text(checkIn);
-      $('#time-out').text(checkOut);
-      $('#days').text(diffDays + ' days');
+      const diffMs = outDate - inDate;
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
+      // If exactly 24 hours or more than 0, return as number of days
       return diffDays;
-    }
-    return 0; // if missing dates
   }
+  function isFullDayBooking(checkin, checkout) {
+      if (!checkin || !checkout) return false;
 
+      const inDate = new Date(checkin);
+      const outDate = new Date(checkout);
+
+      // Remove time portion to count full days only
+      inDate.setHours(0, 0, 0, 0);
+      outDate.setHours(0, 0, 0, 0);
+
+      const diffMs = outDate - inDate;
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+      // Return true only if 1 or more full days and an integer
+      return diffDays >= 1 && Number.isInteger(diffDays);
+  }
   $('#reservationBtn').on('click', function (e) {
     const fields = [
       { id: 'checkin-date', label: 'Check-in Date' },
@@ -173,10 +207,12 @@ $(document).ready(function () {
     ];
     e.preventDefault();
     let valid = validateForm(fields);
+    const facilitydetails = window.venue;
 
     const checkin = $('#checkin-date').val();
     const checkout = $('#checkout-date').val();
 
+    let wholeDay = isFullDayBooking(checkin, checkout);
    
     if (checkin) {
       const checkinDate = new Date(checkin);
@@ -230,7 +266,20 @@ $(document).ready(function () {
         }).showToast();
       }
     }
-    const facilitydetails = window.venue;
+    if(facilitydetails.category == "room"){
+      if(!wholeDay){
+        valid = false;
+        Toastify({
+          text: 'The minimum booking is 1 full day. Partial-day bookings are not allowed',
+          duration: 3000,
+          close: true,
+          gravity: 'top',
+          position: 'right',
+          backgroundColor: '#cc3300',
+          stopOnFocus: true
+        }).showToast();
+      }
+    }
     let isConflict = false;
     if(facilitydetails.category === 'cottage')
     {
@@ -250,13 +299,12 @@ $(document).ready(function () {
       }
 
       isConflict = window.bookingDetails.some(booking => {
-        const reservedStart = stripTime(new Date(booking.time_in));
-        const reservedEnd = stripTime(new Date(booking.time_out));
-        reservedEnd.setDate(reservedEnd.getDate() + 1);
-        const inDate = stripTime(new Date(checkin));
-        const outDate = stripTime(new Date(checkout));
+          const reservedStart = stripTime(new Date(booking.time_in));
+          const reservedEnd = stripTime(new Date(booking.time_out));
+          const inDate = stripTime(new Date(checkin));
+          const outDate = stripTime(new Date(checkout));
 
-        return inDate <= reservedEnd && outDate >= reservedStart;
+          return inDate < reservedEnd && outDate > reservedStart;
       });
     }
     
@@ -316,32 +364,81 @@ $(document).ready(function () {
 
 // Calendar initialization
 
-document.addEventListener('DOMContentLoaded', function () {
-  var calendarEl = document.getElementById('calendar');
-  var calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: 'dayGridMonth'
-  });
-  calendar.render();
-});
-
 
 document.addEventListener('DOMContentLoaded', function () {
-  var calendarEl = document.getElementById('calendar');
-  var calendar = new FullCalendar.Calendar(calendarEl, {
+  const now = new Date();
+  const calendarEl = document.getElementById('calendar');
+
+  // Convert datetime to "YYYY-MM-DD hh:mm AM/PM"
+  function formatDateTime(datetime) {
+    const d = new Date(datetime.replace(" ", "T")); // fix 12a issue
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    let hours = d.getHours();
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    return `${year}-${month}-${day} ${hours}:${minutes} ${ampm}`;
+  }
+
+  // Determine reservation status
+  function getStatus(checkIn, checkOut) {
+    const start = new Date(checkIn.replace(" ", "T"));
+    const end = new Date(checkOut.replace(" ", "T"));
+
+    if (now < start) return "UPCOMING";
+    if (now >= start && now <= end) return "ONGOING";
+    return "DONE";
+  }
+
+  // Prepare FullCalendar events
+  const formattedEvents = window.bookingDetails.map(event => ({
+    title: "Reservation",
+    start: event.time_in.replace(" ", "T"),  // use ISO format
+    end: event.time_out.replace(" ", "T"),   // use ISO format
+    extendedProps: {
+      checkIn: event.time_in,
+      checkOut: event.time_out,
+      status: getStatus(event.time_in, event.time_out)
+    },
+    backgroundColor: "#0722cf",
+    borderColor: "#0722cf",
+    textColor: "#fff",
+    display: "block"
+  }));
+
+  // Initialize FullCalendar
+  const calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: 'dayGridMonth',
-    selectable: true,
+    initialDate: '2025-12-01',
     dayMaxEvents: 1,
-    moreLinkClick: 'popover',
-    eventColor: '#0722cfff', // default color
-    events: window.bookingDetails.map(event => {
-      const currentDate = new Date();
-      const eventendDate = new Date(event.end);
+    moreLinkClick: false,
+    displayEventTime: false, 
+    events: formattedEvents,
 
-      if (eventendDate < currentDate) {
-        event.title = 'Reserve';
-      }
-      return event;
-    })
+    // Click event to show modal
+    eventClick: function(info) {
+      const props = info.event.extendedProps;
+      const html = `
+        <div style="font-size:14px; line-height:1.4;">
+          <strong>Reservation</strong><br>
+          Check-in: ${formatDateTime(props.checkIn)}<br>
+          Check-out: ${formatDateTime(props.checkOut)}<br>
+          Status: ${props.status}
+        </div>
+      `;
+      document.getElementById("reservationList").innerHTML = html;
+      new bootstrap.Modal(document.getElementById("reservationModal")).show();
+    },
+
+    // Style event text
+    eventDidMount: function(info) {
+      info.el.style.whiteSpace = "normal"; // allow multiline
+      info.el.style.fontSize = "12px";
+      info.el.style.padding = "2px";
+    }
   });
+
   calendar.render();
 });

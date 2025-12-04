@@ -63,6 +63,7 @@ class GoogleAuthController extends Controller
         }
 
         $logData = [
+            'user_id' => $newUser->id ?? $existingUser->id,
             'action' => 'Login',
             'table_name' => 'Users',
             'description' => 'Successfully login',

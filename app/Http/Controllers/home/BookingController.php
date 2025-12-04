@@ -73,10 +73,10 @@ class BookingController extends Controller
                   'start' => date('Y-m-d', strtotime($data->check_in)),
                   'end'   => date('Y-m-d', strtotime($data->check_out)), 
                   'time_in' => $data->check_in,
-                  'time_out' => $data->check_in 
+                  'time_out' => $data->check_out 
               ];
         });
-        
+      //dd($bookingDetails);
       return view('content.booking.facility_details', compact('venue', 'ratings','bookingDetails'));
     }
     public function viewFoods(Request $request){

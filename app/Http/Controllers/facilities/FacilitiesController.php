@@ -17,12 +17,38 @@ use Illuminate\Support\Facades\Storage;
 
 class FacilitiesController extends Controller
 {
-  public function index() {
+  public function index(Request $request) {
     $venues = Facility::with('picture')
-        ->whereNull('deleted_at')
-        ->get();
+        ->whereNull('deleted_at');
+
+    $isFiltering = false; // <–– default
+
+        $startDate = $request->input('checkin');
+        $endDate = $request->input('checkout');
+
+        if ($startDate && $endDate) {
+
+            $isFiltering = true; // <–– filtering triggered
+
+            $startDateFormatted = date('Y-m-d', strtotime($startDate));
+            $endDateFormatted = date('Y-m-d', strtotime($endDate));
+
+            $venues = $venues->whereDoesntHave('bookings', function ($query) use ($startDateFormatted, $endDateFormatted) {
+                $query->whereNotIn('status', ['Cancel', 'Full Paid'])
+                      ->where(function ($q) use ($startDateFormatted, $endDateFormatted) {
+                          $q->whereBetween('check_in', [$startDateFormatted, $endDateFormatted])
+                            ->orWhereBetween('check_out', [$startDateFormatted, $endDateFormatted])
+                            ->orWhere(function ($q2) use ($startDateFormatted, $endDateFormatted) {
+                                $q2->where('check_in', '<=', $startDateFormatted)
+                                  ->where('check_out', '>=', $endDateFormatted);
+                            });
+                      });
+            });
+        }
+
+        $venues = $venues->get();
     
-    return view('content.facilities.facilities', compact('venues'));
+    return view('content.facilities.facilities', compact('venues', 'isFiltering'));
   }
   // Add
   public function store(Request $request) {

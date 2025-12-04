@@ -82,6 +82,7 @@
     "@popperjs/core": "2.11.8",
     "apexcharts-clevision": "3.28.5",
     "bootstrap": "5.3.3",
+    "crypto-js": "^4.2.0",
     "fullcalendar": "^6.1.19",
     "highlight.js": "11.9.0",
     "jquery": "3.7.1",

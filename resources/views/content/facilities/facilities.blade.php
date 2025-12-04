@@ -20,6 +20,19 @@
 
       <!-- Buttons -->
       <div class="navbar-nav d-flex flex-row align-items-center gap-2 ms-auto">
+        @if(!$isFiltering)
+              <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filtering">
+                  <i class="ri-filter-line ri-22px me-1"></i>Filter
+              </button>
+          @endif
+            {{-- Dropdown appears ONLY if user applied filters --}}
+          @if($isFiltering)
+              <div class="dropdown">
+                  <a class="btn btn-outline-primary" href="{{ route('product-facilities') }}">
+                      <i class="ri-loader-line"></i> Reload
+                  </a>
+              </div>
+          @endif
         <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#AddProduct">
           <span class="tf-icons ri-add-circle-line ri-16px me-1_5"></span>Add Facilities
         </button>
@@ -225,6 +238,36 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary" id="UpdateProduct">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="filtering" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header">
+        <h5 class="modal-title text-center w-100">Filter for venues</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="filteringData" action="{{ route('product-facilities')}}" method="GET">
+          @csrf
+          <div class="row mb-4">
+            <div class="col">
+              <label for="checkin" class="form-label">Start Date</label>
+              <input type="date" name="checkin" id="checkin" class="form-control">
+            </div>
+          </div>
+          <div class="row mb-4">
+            <div class="col">
+              <label for="checkout" class="form-label">End Date</label>
+              <input type="date" name="checkout" id="checkout" class="form-control">
+            </div>
+          </div>
+           <div class="modal-footer">
+            <button type="submit" class="btn btn-primary" id="SaveComment">Apply Filters</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
