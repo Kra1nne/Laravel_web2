@@ -82,7 +82,6 @@
         </div>
         </div>
         <div class="row justify-content-between mt-5">
-           <p class="text-gray">Note: The time displayed represents the check out time of the guest.</p>
           <div class="col-md-6 col-lg-6 mb-4 d-flex align-items-stretch">
             <div id="calendar" style="width: 100%; height: 500px;"></div>
           </div>

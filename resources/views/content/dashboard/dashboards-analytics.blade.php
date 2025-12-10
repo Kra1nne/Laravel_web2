@@ -240,54 +240,6 @@
     </div>
   </div>
   
-  
-  <div class="col-12">
-    <div class="card overflow-hidden">
-      <div class="table-responsive">
-        <table class="table table-sm">
-          <thead>
-            <tr>
-              <th class="text-truncate">Name</th>
-              <th class="text-truncate">Place</th>
-              <th class="text-truncate">Amount</th>
-              <th class="text-truncate">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            @foreach ($reservations as $item)
-             <tr class="border-transparent">
-              <td>
-                <div class="d-flex align-items-center">
-                  <div class="avatar avatar-sm me-4">
-                    <img src="{{asset('assets/img/profile/profile.png')}}" alt="Avatar" class="rounded-circle">
-                  </div>
-                  <div>
-                    <h6 class="mb-0 text-truncate">{{ $item->firstname}}</h6>
-                    <small class="text-truncate">{{ $item->email }}</small>
-                  </div>
-                </div>
-              </td>
-              <td class="text-truncate">{{  $item->facility->name }}</td>
-              <td class="text-truncate">
-                <div class="d-flex align-items-center">
-                  <span>₱{{ number_format($item->amount, 2) }}</span>
-                </div>
-              </td>
-              <td>
-                @if ($item->status == 'Partial Payment')
-                    <span class="badge rounded-pill bg-label-warning me-1">Partial Payment</span>
-                @else
-                    <span class="badge rounded-pill bg-label-success me-1">Complete</span>
-                @endif
-              </td>
-            </tr>
-            @endforeach
-
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
   <div class="col-12">
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
