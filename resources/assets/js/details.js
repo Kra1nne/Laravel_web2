@@ -394,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Prepare FullCalendar events
   const formattedEvents = window.bookingDetails.map(event => ({
-    title: "Reservation",
+    title: "Reserved",
     start: event.time_in.replace(" ", "T"),  // use ISO format
     end: event.time_out.replace(" ", "T"),   // use ISO format
     extendedProps: {

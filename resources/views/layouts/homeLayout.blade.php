@@ -13,6 +13,3 @@
 @vite(['resources/assets/css/homenavbar.css'])
 @endsection
 
-@section('page-script')
-@vite(['resources/assets/js/homenavbar.js'])
-@endsection

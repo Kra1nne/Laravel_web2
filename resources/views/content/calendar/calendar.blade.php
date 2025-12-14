@@ -50,7 +50,7 @@
 
             // STEP 3: Events for calendar
             const events = Object.keys(grouped).map(date => ({
-                title: "Reservation +" + grouped[date].length,
+                title: "Reserved +" + grouped[date].length,
                 start: date,
                 allDay: true,
                 extendedProps: { reservations: grouped[date] },
