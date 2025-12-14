@@ -44,6 +44,8 @@ export default defineConfig({
         'resources/assets/css/demo.css',
         'resources/js/app.js',
         'resources/assets/css/homenavbar.css',
+        'resources/assets/css/deatails.css',
+        'resources/assets/js/details.js',
         ...pageJsFiles,
         ...vendorJsFiles,
         ...LibsJsFiles,

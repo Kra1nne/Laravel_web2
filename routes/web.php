@@ -24,11 +24,11 @@ use App\Http\Controllers\report\ReportControllers;
 use App\Http\Controllers\evaluation\EvaluationControllers;
 use App\Http\Controllers\CalendarController;
 
-Route::get('/', [LandingPageController::class, 'index'])->name('home')->middleware(['throttle:web']);
-Route::get('/pricing', [PricingController::class, 'index'])->name('pricing')->middleware(['throttle:web']);
-Route::get('/booking', [BookingController::class, 'index'])->name('booking')->middleware(['throttle:web']);
-Route::get('/features', [FeatureController::class, 'index'])->name('features')->middleware(['throttle:web']);
-Route::get('/foods-menu', [FoodController::class, 'display'])->name('foods')->middleware(['throttle:web']);
+Route::get('/', [LandingPageController::class, 'index'])->name('home');
+Route::get('/pricing', [PricingController::class, 'index'])->name('pricing');
+Route::get('/booking', [BookingController::class, 'index'])->name('booking');
+Route::get('/features', [FeatureController::class, 'index'])->name('features');
+Route::get('/foods-menu', [FoodController::class, 'display'])->name('foods');
 
 Route::get('/booking/pdf/{id}', [BookingController::class, 'displayPDF'])->name('pdfView')->middleware(['auth']);
 

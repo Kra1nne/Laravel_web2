@@ -274,7 +274,7 @@ $(document).ready(function () {
     users.forEach(user => {
       const userRow = `
         <tr>
-          <td><span>${user.firstname} ${user.lastname}</span></td>
+          <td><span>${user.firstname ?? " "} ${user.lastname ?? " "}</span></td>
           <td>${user.email}</td>
           <td>${user.role}</td>
           <td><span class="badge rounded-pill bg-label-primary me-1">Active</span></td>

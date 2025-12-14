@@ -7,7 +7,7 @@
 @endsection
 
 @section('page-style')
-@vite(['resources/assets/css/details.css'])
+@vite(['resources/assets/css/deatails.css'])
 @endsection
 
 @section('content')

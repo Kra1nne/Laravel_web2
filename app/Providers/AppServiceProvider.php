@@ -24,24 +24,29 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         RateLimiter::for('login', function (Request $request) {
-            return [
-                Limit::perMinute(10),
-                Limit::perMinute(3)->by($request->input('email_username')),
-            ];
-        });
-        RateLimiter::for('api', function (Request $request) {
-            return [
-                Limit::perMinute(25)->by($request->ip()), // 60 requests per minute per IP
-                Limit::perMinute(1000), // Global limit of 1000 requests per minute
-            ];
+            $key = strtolower($request->input('email_username')) . '|' . $request->ip();
+
+            return Limit::perMinute(5)->by($key);
         });
 
-        // General web rate limiter
+        /*
+        |--------------------------------------------------------------------------
+        | API Rate Limiter
+        |--------------------------------------------------------------------------
+        | 120 requests per minute per IP
+        */
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(120)->by($request->ip());
+        });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Web Rate Limiter
+        |--------------------------------------------------------------------------
+        | 300 requests per minute per IP
+        */
         RateLimiter::for('web', function (Request $request) {
-            return [
-                Limit::perMinute(25)->by($request->ip()), // 50 requests per minute per IP
-                Limit::perMinute(2000), // Global limit of 2000 requests per minute
-            ];
+            return Limit::perMinute(300)->by($request->ip());
         });
     }
 }
