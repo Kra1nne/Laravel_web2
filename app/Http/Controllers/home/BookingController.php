@@ -65,6 +65,7 @@ class BookingController extends Controller
         ->get();
 
       $bookingDetails = Booking::with('facility')
+        ->where('bookings.status', '!=', 'cancel')
         ->whereHas('facility', function ($query) use ($decryptedId) {
             $query->where('id', $decryptedId);
         })
@@ -73,10 +74,10 @@ class BookingController extends Controller
                   'start' => date('Y-m-d', strtotime($data->check_in)),
                   'end'   => date('Y-m-d', strtotime($data->check_out)), 
                   'time_in' => $data->check_in,
-                  'time_out' => $data->check_out 
+                  'time_out' => $data->check_in 
               ];
         });
-      //dd($bookingDetails);
+      
       return view('content.booking.facility_details', compact('venue', 'ratings','bookingDetails'));
     }
     public function viewFoods(Request $request){
@@ -115,7 +116,7 @@ class BookingController extends Controller
         'check_out' => $booking->check_out,
         'date' => now(),
         'promo' => $booking->name,
-        'service_fee' => 50,
+        'service_fee' => 0,
         'total_amount' => $booking->amount,
         'status' => $booking->status,
       ];

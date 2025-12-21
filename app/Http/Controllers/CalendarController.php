@@ -10,6 +10,7 @@ class CalendarController extends Controller
     public function index(){
         $reservations = Booking::leftjoin('facilities', 'facilities.id', '=', 'bookings.facilities_id')
                     ->leftjoin('payments', 'payments.bookings_id', '=', 'bookings.id')
+                    ->where('payments.status', '!=' , 'Cancel')
                     ->get();
         
         return view('content.calendar.calendar', compact('reservations'));

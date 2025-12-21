@@ -121,6 +121,61 @@ class Analytics extends Controller
             $monthlyRevenue[] = Booking::sum(DB::raw("CASE WHEN MONTH(created_at) = $month THEN facility_income ELSE 0 END"));
         }
 
+        $facilitiesData = Facility::leftJoin('bookings', 'bookings.facilities_id', '=', 'facilities.id')
+                                ->whereNull('facilities.deleted_at')
+                                ->groupBy('facilities.id', 'facilities.name')
+                                ->select(
+                                    'facilities.name',
+                                    DB::raw('COALESCE(SUM(bookings.amount), 0) as total')  // COALESCE converts null to 0
+                                )
+                                ->get();
+
+        $foodData = Food::leftjoin('food_bookings', 'food_bookings.foods_id', '=', 'foods.id')
+                        ->whereNull('foods.deleted_at')
+                        ->groupBy('foods.id', 'foods.name')
+                        ->select(
+                            'foods.name',
+                            DB::raw('COALESCE(SUM(foods.price * food_bookings.quantity), 0) as total')  // COALESCE converts null to 0
+                        )
+                        ->get();
+        $RoomBest = Facility::leftJoin('bookings', 'bookings.facilities_id', '=', 'facilities.id')
+                   ->leftjoin('pictures', 'facilities.id', '=', 'pictures.facilities_id')
+                   ->whereNull('facilities.deleted_at')
+                   ->where('facilities.category', '=', 'room')
+                   ->groupBy('facilities.id', 'facilities.name', 'pictures.path')  // add pictures.path to groupBy
+                   ->select(
+                       'facilities.name',
+                       'pictures.path',
+                       DB::raw('COALESCE(SUM(bookings.amount), 0) as total')
+                   )
+                   ->orderBy('total', 'desc')
+                   ->first();  // Fetch the actual record here
+        
+        $CottageBest = Facility::leftJoin('bookings', 'bookings.facilities_id', '=', 'facilities.id')
+                                ->leftjoin('pictures', 'facilities.id', '=', 'pictures.facilities_id')
+                                ->whereNull('facilities.deleted_at')
+                                ->where('facilities.category', '=', 'cottage')
+                                ->groupBy('facilities.id', 'facilities.name', 'pictures.path')  
+                                ->select(
+                                    'facilities.name',
+                                    'pictures.path',
+                                    DB::raw('COALESCE(SUM(bookings.amount), 0) as total')  // COALESCE converts null to 0
+                                )
+                                ->orderBy('total', 'desc')
+                                ->first();
+
+        $foodBest = Food::leftjoin('food_bookings', 'food_bookings.foods_id', '=', 'foods.id')
+                        ->leftjoin('pictures', 'pictures.foods_id', '=', 'foods.id')
+                        ->whereNull('foods.deleted_at')
+                        ->groupBy('foods.id', 'foods.name', 'pictures.path')
+                        ->select(
+                            'foods.name',
+                            'pictures.path',
+                            DB::raw('COALESCE(SUM(foods.price * food_bookings.quantity), 0) as total')  // COALESCE converts null to 0
+                        )
+                        ->orderBy('total', 'desc')
+                        ->first();
+                            
       return view('content.dashboard.dashboards-analytics', compact(
           'reservations',
           'payment',
@@ -138,7 +193,12 @@ class Analytics extends Controller
           'cottageData',
           'monthlyRevenue',
           'averageRevenue',
-          'monthlyPartialData'
+          'monthlyPartialData',
+          'facilitiesData',
+          'foodData',
+          'foodBest',
+          'CottageBest',
+          'RoomBest'
       ));
   }
 

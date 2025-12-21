@@ -266,11 +266,15 @@ $(document).ready(function () {
         }).showToast();
       }
     }
+    function isPositiveWholeNumber(num) {
+        return Number.isInteger(num) && num > 0;
+    }
+     let days = calculateDays(checkin, checkout)
     if(facilitydetails.category == "room"){
-      if(!wholeDay){
+      if(!isPositiveWholeNumber(days)){
         valid = false;
         Toastify({
-          text: 'The minimum booking is 1 full day. Partial-day bookings are not allowed',
+          text: 'The minimum booking is full day.',
           duration: 3000,
           close: true,
           gravity: 'top',
@@ -283,14 +287,12 @@ $(document).ready(function () {
     let isConflict = false;
     if(facilitydetails.category === 'cottage')
     {
+      console.log("Cottoges");
       isConflict = window.bookingDetails.some(booking => {
         const reservedStart = new Date(booking.time_in);
         const reservedEnd = new Date(booking.time_out);
         const inDate = new Date(checkin);
         const outDate = new Date(checkout);
-        console.log(inDate == reservedEnd);
-        console.log(inDate);
-        console.log(reservedStart);
         return inDate <= reservedEnd && outDate >= reservedStart;
       });
     }else{
@@ -334,10 +336,8 @@ $(document).ready(function () {
       $('#number_of_guests').text($('#guest').val());
 
       let total = 0;
-      let venuePrice = Number($('#venue_price').val()) || 0;
-      let days = calculateDays(checkin, checkout) || 1; // fallback to 1 day if 0
-      //let serviceFee = venuePrice * days * (2.5 / 100);
-      let serviceFee = 50;
+
+      let serviceFee = 0;
       if (facilitydetails.category === 'cottage') {
         total = Number($('#venue_price').val()) + serviceFee;
       } else {
@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Style event text
     eventDidMount: function(info) {
-      info.el.style.whiteSpace = "normal"; // allow multiline
+      info.el.style.whiteSpace = "normal";
       info.el.style.fontSize = "12px";
       info.el.style.padding = "2px";
     }

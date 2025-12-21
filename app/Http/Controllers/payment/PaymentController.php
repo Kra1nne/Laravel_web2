@@ -318,7 +318,7 @@ class PaymentController extends Controller
             'date' => now(),
             'promo' => $booking->name,
             'status' => $booking->status,
-            'service_fee' => 50,
+            'service_fee' => 0,
             'total_amount' => $booking->amount,
         ];
 

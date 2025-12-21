@@ -47,12 +47,12 @@ class ReservationController extends Controller
                       ")
                     ->orderBy('bookings.created_at', 'DESC')
                     ->distinct('bookings.id')
-                    ->select('bookings.*', 'facilities.name as facilities_name', 'promos.name as promos_name', 'promos.price as promos_price', 'facilities.price as facilities_price','person.firstname', 'person.middlename', 'person.lastname', 'rating.rating as rate', 'payments.amount as payment_amount', 'payments.id as payment_id', 'facilities.category as category')
+                    ->select('bookings.*', 'facilities.name as facilities_name', 'promos.name as promos_name', 'promos.price as promos_price', 'facilities.price as facilities_price','person.firstname', 'person.middlename', 'person.lastname', 'rating.rating as rate', 'payments.amount as payment_amount', 'payments.id as payment_id', 'facilities.category as category', 'payments.status as payment_status')
                     ->get()->map(function ($reservation) {
                           $reservation->encrypted_id = Crypt::encryptString($reservation->id);
                           return $reservation;
                       });
-                      
+                
       return view('content.reservation.reservation-list', compact('reservations', 'facilities'));
     }
 
@@ -363,7 +363,7 @@ class ReservationController extends Controller
         'updated_at' => now()
       ];
       $dataPayment = [
-        'amount' => $payment->amount + $request->total_amount,
+        'amount' => $payment->amount + ($request->total_amount / 2),
         'updated_at' => now()
       ];
 
@@ -414,11 +414,13 @@ class ReservationController extends Controller
           $Additional -= $over;
         }
 
-        $addAmount = $Additional * 150;
+        $addAmount = $Additional * $facilities->additional_price;
         $amount += $addAmount;
 
+        $payment->status == 'Partial Payment' ? $paymentData = $amount / 2 : $paymentData = $amount;
+        
         $dataPayment = [
-          'amount' => $amount,
+          'amount' => $paymentData,
           'updated_at' => now(),
         ];
        

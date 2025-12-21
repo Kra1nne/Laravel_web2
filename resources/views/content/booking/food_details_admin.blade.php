@@ -125,9 +125,9 @@
                 <strong  class="text-primary fw-bold">Total Amount: </strong><span id="total-amount" class="text-primary fw-bold">₱{{ number_format($bookingDetails['total_amount'], 2) }}</span>
               </li>
             </ul>
-            <form class="mt-3 d-flex justify-content-end" method="POST" action="{{ route('admin-payment.success') }}">
+            <form id="paymentForm" class="mt-3 d-flex justify-content-end" method="POST" action="{{ route('admin-payment.success') }}">
               @csrf
-              <input type="hidden" name="name" id="CostumerName" required>
+              <input type="hidden" name="name" id="CostumerName" require>
               <input type="hidden" name="facility_income" id="facility_income">
               <input type="hidden" name="food_id" id="food_id">
               <input type="hidden" name="food_quantity" id="food_quantity">
@@ -154,4 +154,23 @@
 
   </div>
 </section>
+<script>
+  $(document).ready(function() {
+    $('#paymentForm').on('submit', function(e) {
+      var name = $('#CostumerName').val();
+      if (!name) {
+        e.preventDefault(); // stop form submission
+        Toastify({
+          text: 'Name is required!',
+          duration: 3000,
+          close: true,
+          gravity: 'top',
+          position: 'right',
+          backgroundColor: '#cc3300',
+          stopOnFocus: true
+        }).showToast();
+      }
+    });
+  });
+</script>
 @endsection

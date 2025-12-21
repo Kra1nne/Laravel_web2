@@ -138,41 +138,118 @@
     // ==========================
   // Revenue by Category (Rooms vs Cottages)
   // ==========================
-  const categoryEl = document.querySelector('#revenueByCategoryChart');
-  if (categoryEl) {
-    const categoryData = JSON.parse(document.getElementById('revenue-category-data').textContent);
-    const categories = Object.keys(categoryData);
-    const values = Object.values(categoryData);
+const categoryEl = document.querySelector('#revenueByCategoryChart');
+if (categoryEl) {
+  const categoryData = JSON.parse(document.getElementById('revenue-category-data').textContent);
+  const categories = Object.keys(categoryData);
+  const values = Object.values(categoryData);
 
-    const categoryChartOptions = {
-      chart: { type: 'bar', height: 320 },
-      series: [{ name: 'Revenue', data: values }],
-      xaxis: { categories },
-      colors: ['#28C76F', '#00CFE8'], // Green for Rooms, Blue for Cottages
-      plotOptions: {
-        bar: {
-          horizontal: false,
-          columnWidth: '50%',
-          borderRadius: 6,
-        }
+  const categoryChartOptions = {
+    chart: { type: 'pie', height: 320 },
+    series: values,
+    labels: categories,
+    colors: ['#28C76F', '#00CFE8'],  // green and blue
+    dataLabels: {
+      enabled: true,
+      formatter: function (val, opts) {
+        const rawValue = opts.w.globals.series[opts.seriesIndex];
+        return `₱${rawValue.toLocaleString()}`;
       },
-      dataLabels: {
-        enabled: true,
-        formatter: val => `₱${val.toLocaleString()}`,
-        style: { fontSize: '13px', colors: ['#333'] }
-      },
-      tooltip: {
-        y: { formatter: val => `₱${val.toLocaleString()}` }
-      },
-      grid: {
-        borderColor: '#e7e7e7',
-        row: { colors: ['#f9f9f9', 'transparent'], opacity: 0.5 },
+      style: { fontSize: '13px', colors: ['#333'] }
+    },
+    tooltip: {
+      y: {
+        formatter: val => `₱${val.toLocaleString()}`
       }
-    };
+    },
+    legend: {
+      position: 'bottom',
+      labels: {
+        colors: '#333'
+      }
+    }
+  };
 
-    new ApexCharts(categoryEl, categoryChartOptions).render();
+  new ApexCharts(categoryEl, categoryChartOptions).render();
+}
+
+
+
+  const facilityBar = document.querySelector('#facilitiesChart');
+  if (facilityBar) {
+      const categoryData = JSON.parse(document.getElementById('facility-revenue-data').textContent);
+
+      // Map names and totals from the array of objects
+      const categories = categoryData.map(item => item.name);
+      const values = categoryData.map(item => item.total);
+
+      const categoryChartOptions = {
+          chart: { type: 'bar', height: 320 },
+          series: [{ name: 'Revenue', data: values }],
+          xaxis: { categories },
+          colors: ['#28C76F'],
+          plotOptions: {
+              bar: {
+                  horizontal: false,
+                  columnWidth: '50%',
+                  borderRadius: 6,
+              }
+          },
+          dataLabels: {
+              enabled: true,
+              formatter: val => `₱${val.toLocaleString()}`,
+              style: { fontSize: '13px', colors: ['#333'] }
+          },
+          tooltip: {
+              y: { formatter: val => `₱${val.toLocaleString()}` }
+          },
+          grid: {
+              borderColor: '#e7e7e7',
+              row: { colors: ['#f9f9f9', 'transparent'], opacity: 0.5 },
+          }
+      };
+
+      new ApexCharts(facilityBar, categoryChartOptions).render();
   }
 
+
+    const foodsBar = document.querySelector('#foodsChart');
+  if (foodsBar) {
+      const categoryData = JSON.parse(document.getElementById('foods-revenue-data').textContent);
+
+      // Map names and totals from the array of objects
+      const categories = categoryData.map(item => item.name);
+      const values = categoryData.map(item => item.total);
+
+      const categoryChartOptions = {
+          chart: { type: 'bar', height: 320 },
+          series: [{ name: 'Revenue', data: values }],
+          xaxis: { categories },
+          colors: ['#28C76F'],
+          plotOptions: {
+              bar: {
+                  horizontal: false,
+                  columnWidth: '50%',
+                  borderRadius: 6,
+              }
+          },
+          dataLabels: {
+              enabled: true,
+              formatter: val => `₱${val.toLocaleString()}`,
+              style: { fontSize: '13px', colors: ['#333'] }
+          },
+          tooltip: {
+              y: { formatter: val => `₱${val.toLocaleString()}` }
+          },
+          grid: {
+              borderColor: '#e7e7e7',
+              row: { colors: ['#f9f9f9', 'transparent'], opacity: 0.5 },
+          }
+      };
+
+      new ApexCharts(foodsBar, categoryChartOptions).render();
+  }
+  
 
   // ==========================
   // Refunds / Cancellations Chart

@@ -172,6 +172,98 @@
       </div>
     </div>
   </div>
+   <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Partial Payment</h4>
+        <form method="GET">
+          <div class="d-flex align-items-center">
+            <select name="year" id="year" class="form-select" onchange="this.form.submit()">
+              @foreach ($availableYears as $year)
+                <option value="{{ $year }}" {{ $year == $selectedYear ? 'selected' : '' }}>{{ $year }}</option>
+              @endforeach
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="card-body">
+        <div id="totalProfitLineChartPartial" style="height: 400px;"></div>
+        <span id="monthly-partial-data" style="display:none;">{{ json_encode($monthlyPartialData) }}</span>
+      </div>
+    </div>
+  </div>
+  <!-- facilities -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-item-center">
+        <h4>Facilties</h4>
+      </div>
+      <div class="card-body">
+        <div id="facilitiesChart" style="height: 400px;"></div>
+        <span id="facility-revenue-data" style="display:none;">
+            {{ json_encode($facilitiesData->map(fn($f) => ['name' => $f->name, 'total' => $f->total])) }}
+        </span>
+      </div>
+    </div>
+  </div>
+  <!-- foods -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-item-center">
+        <h4>Foods</h4>
+      </div>
+      <div class="card-body">
+        <div id="foodsChart" style="height: 400px;"></div>
+        <span id="foods-revenue-data" style="display:none;">
+            {{ json_encode($foodData->map(fn($f) => ['name' => $f->name, 'total' => $f->total])) }}
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="row gy-4">
+    <div class="col-xl-4 col-md-12">
+        <div class="card h-100 position-relative">
+            <!-- Badge -->
+            <span class="badge bg-success text-dark position-absolute top-0 start-0 m-2">Best Seller</span>
+            <div class="card-body p-0">
+                <img class="d-block w-100" src="{{ $RoomBest->path }}" alt="Room Best" style="height: 300px; object-fit: cover;">
+            </div>
+            <div class="card-body">
+              <h6>{{ $RoomBest->name}}</h3>
+              <span>Total Sales of ₱{{ number_format($RoomBest->total, 2)}}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-md-12">
+        <div class="card h-100 position-relative">
+            <!-- Badge -->
+            <span class="badge bg-success text-dark position-absolute top-0 start-0 m-2">Best Seller</span>
+            <div class="card-body p-0">
+                <img class="d-block w-100" src="{{ $CottageBest->path }}" alt="Room Best" style="height: 300px; object-fit: cover;">
+            </div>
+             <div class="card-body">
+              <h6>{{ $CottageBest->name}}</h3>
+              <span>Total Sales of ₱{{ number_format($CottageBest->total, 2)}}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-md-12">
+        <div class="card h-100 position-relative">
+            <!-- Badge -->
+            <span class="badge bg-success text-dark position-absolute top-0 start-0 m-2">Best Seller</span>
+            <div class="card-body p-0">
+                <img class="d-block w-100" src="{{ $foodBest->path }}" alt="Room Best" style="height: 300px; object-fit: cover;">
+            </div>
+             <div class="card-body">
+              <h6>{{ $foodBest->name}}</h3>
+              <span>Total Sales of ₱{{ number_format($foodBest->total, 2)}}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
     <!-- Additional Analytics Section -->
   <div class="col-12 col-lg-6">
     <div class="card">
@@ -191,7 +283,7 @@
         <h4 class="mb-0">Revenue by Category</h4>
       </div>
       <div class="card-body">
-        <div id="revenueByCategoryChart" style="height: 320px;"></div>
+        <div id="revenueByCategoryChart" style="height: 335px;"></div>
 
         <!-- Hidden JSON data -->
         <span id="revenue-category-data" style="display:none;">
@@ -240,26 +332,7 @@
     </div>
   </div>
   
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <h4 class="mb-0">Partial Payment</h4>
-        <form method="GET">
-          <div class="d-flex align-items-center">
-            <select name="year" id="year" class="form-select" onchange="this.form.submit()">
-              @foreach ($availableYears as $year)
-                <option value="{{ $year }}" {{ $year == $selectedYear ? 'selected' : '' }}>{{ $year }}</option>
-              @endforeach
-            </select>
-          </div>
-        </form>
-      </div>
-      <div class="card-body">
-        <div id="totalProfitLineChartPartial" style="height: 400px;"></div>
-        <span id="monthly-partial-data" style="display:none;">{{ json_encode($monthlyPartialData) }}</span>
-      </div>
-    </div>
-  </div>
+ 
 
 
 <!-- Pass the amounts data as a hidden JSON element -->

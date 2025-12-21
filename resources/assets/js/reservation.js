@@ -87,7 +87,7 @@ $(document).ready(function () {
     }
 
     reservations.forEach(reservation => {
-      const fullname = reservation.name ?? reservation.firstname + (reservation.middlename ?? ' ') + reservation.lastname;
+      const fullname = reservation.name ?? reservation.firstname ?? ' ' + (reservation.middlename ?? ' ') + reservation.lastname ?? ' ';
       const Options = `
         ${reservation.status != 'Fully Paid' && new Date(reservation.check_in) <= new Date() ? `
           <a class="dropdown-item DoneBtn" href="javascript:void(0);"
@@ -100,7 +100,7 @@ $(document).ready(function () {
         ` : ''}
       `;
       const Add = `
-        ${new Date(reservation.check_out) > new Date()? `
+        ${new Date(reservation.check_out) > new Date() && reservation.payment_status != "Cancel"? `
           <a class="dropdown-item AddBtn" href="/reservations/add_food/${encryptNumber(reservation.id)}">
             <i class="ri-restaurant-2-line me-1"></i> Add Foods
           </a>
@@ -170,7 +170,7 @@ $(document).ready(function () {
                 const checkOut = new Date(reservation.check_out);
 
                 if (reservation.status === "Cancel") {
-                  return "Canceled";
+                  return "Cancelled";
                 } else if (now > checkOut) {
                   return "Done";
                 } else if (now >= checkIn && now <= checkOut) {
@@ -412,17 +412,46 @@ $(document).ready(function () {
             }
 
             const extendTime = $('#extend').val();
-
+            function isPositiveWholeNumber(num) {
+                return Number.isInteger(num) && num > 0;
+            }
             if (category === "room") {
+
                 const days = calculateDays(normalizeDate(end), normalizeDate(extendTime));
-                console.log(days);
+                if(!isPositiveWholeNumber(days)){
+                  Toastify({
+                    text: 'The minimum extension is full day.',
+                    duration: 3000,
+                    close: true,
+                    gravity: 'top',
+                    position: 'right',
+                    backgroundColor: '#cc3300',
+                    stopOnFocus: true
+                  }).showToast();
+                  return;
+                }
                 const amount = price * days;
                 $('#additional').val(amount);
             }
 
             else if (category === "cottage") {
+                const extendDate = new Date(extendTime);
+                const hour = extendDate.getHours();
+
+                if (hour >= 22 || hour < 5) {
+                    Toastify({
+                        text: 'Cottage extensions are not allowed from 10:00 PM to 4:59 AM due to curfew.',
+                        duration: 3000,
+                        close: true,
+                        gravity: 'top',
+                        position: 'right',
+                        backgroundColor: '#cc3300',
+                        stopOnFocus: true
+                    }).showToast();
+                    return;
+                }
+
                 const hours = calculateHours(normalizeDate(end), normalizeDate(extendTime));
-                console.log(hours);
                 const amount = hours * 100; 
                 $('#additional').val(amount);
             }

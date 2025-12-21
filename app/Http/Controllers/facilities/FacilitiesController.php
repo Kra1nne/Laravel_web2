@@ -193,6 +193,7 @@ class FacilitiesController extends Controller
         ->get();
 
       $bookingDetails = Booking::with('facility')
+        ->where('bookings.status', '!=', 'cancel')
         ->whereHas('facility', function ($query) use ($decryptedId) {
             $query->where('id', $decryptedId);
         })
