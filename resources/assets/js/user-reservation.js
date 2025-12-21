@@ -26,7 +26,7 @@ $(document).ready(function () {
       
       const Options = `
         ${reservation.status != 'Fully Paid' && reservation.status != 'Cancel' && new Date(reservation.check_in) >= new Date() ? `
-          <a class="dropdown-item UpdateBtn" data-bs-toggle="modal" data-bs-target="#UpdateReservation" href="javascript:void(0);"
+          <a class="btn btn-sm btn-outline-gray UpdateBtn" data-bs-toggle="modal" data-bs-target="#UpdateReservation" href="javascript:void(0);"
           data-checkin="${reservation.check_in}"
           data-checkout="${reservation.check_out}"
           data-id="${reservation.id}"
@@ -35,7 +35,7 @@ $(document).ready(function () {
           >
             <i class="ri-edit-2-line me-1 text-warning"></i> Update
           </a>
-          <a class="dropdown-item CancelBtn" href="javascript:void(0);"
+          <a class="btn btn-sm btn-outline-gray CancelBtn" href="javascript:void(0);"
           data-id="${reservation.id}"
           data-payment_id="${reservation.payment_id}"
           >
@@ -44,7 +44,7 @@ $(document).ready(function () {
           <form class="d-inline fully-paid-form" method="POST" action="${fullpaidRoute}">
               <input type="hidden" name="_token" value="${csrfToken}">
               <input type="hidden" name="id" value="${reservation.id}">
-              <button type="submit" class="dropdown-item" title="Mark as Fully Paid">
+              <button type="submit" class="btn btn-sm btn-outline-gray" title="Mark as Fully Paid">
                   <i class="ri-bill-line me-1 text-success"></i> Fully Paid
               </button>
           </form>
@@ -88,9 +88,7 @@ $(document).ready(function () {
                     data-facilities_id="${reservation.facilities_id}">
                     <i class="ri-star-line me-1"></i> ${reservation.rate != null ? 'Done' : 'Rate'}
                   </a>
-                  <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-more-2-line"></i></button>
-                  <div class="dropdown-menu">
-                    <a class="dropdown-item ViewBtn" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#ViewReservation"
+                   <a class="btn btn-sm btn-outline-gray ViewBtn" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#ViewReservation"
                       data-id="${reservation.encrypted_id}"
                       data-customer_name="${reservation.firstname} ${reservation.middlename !== null ? reservation.middlename : ''} ${reservation.lastname}"
                       data-facility_name="${reservation.facilities_name}"
@@ -109,7 +107,6 @@ $(document).ready(function () {
                       <i class="ri-eye-line me-1 text-primary"></i> View
                     </a>
                     ${Options}
-                  </div>
                 </div>
               </div>
 

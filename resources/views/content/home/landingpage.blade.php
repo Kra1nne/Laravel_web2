@@ -338,9 +338,6 @@
             <small class="text-muted">Guest from Cebu City</small>
           </div>
         </div>
-        <div class="mt-5">
-          <a class="btn btn-outline-primary" target="_blank" href="{{ route('evaluate')}}">Evaluate Now</a>
-        </div>
       </div>
 
     </div>

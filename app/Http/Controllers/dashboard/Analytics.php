@@ -10,6 +10,7 @@ use App\Models\Food;
 use App\Models\FoodBooking;
 use App\Models\Facility;
 use App\Models\Rating;
+use Carbon\Carbon;
 use DB;
 
 
@@ -20,6 +21,18 @@ class Analytics extends Controller
                            
       
       $selectedYear = $request->input('year', now()->year);
+
+      $monthFood = [];
+      for ($i = 0; $i < 12; $i++) {
+          $m = Carbon::now()->subMonths($i);
+          $months0[$m->format('Y-m')] = $m->format('F Y');
+      }
+
+      $monthFacility = [];
+      for ($i = 0; $i < 12; $i++) {
+          $m = Carbon::now()->subMonths($i);
+          $months1[$m->format('Y-m')] = $m->format('F Y');
+      }
 
       $foodCount = Food::whereNull('deleted_at')->count();
       $facilitycount = Facility::whereNull('deleted_at')->count();
@@ -101,7 +114,7 @@ class Analytics extends Controller
         // Fill missing months with 0
         $refundsData = collect(range(1, 12))->map(fn($m) => $refundsData[$m] ?? 0);
 
-         $roomData = Booking::leftjoin('facilities', 'facilities.id', '=', 'bookings.facilities_id')
+        $roomData = Booking::leftjoin('facilities', 'facilities.id', '=', 'bookings.facilities_id')
                 ->where('facilities.category', "=",'room')
                 ->sum('bookings.facility_income');
 
@@ -120,24 +133,40 @@ class Analytics extends Controller
         foreach ($months as $month) {
             $monthlyRevenue[] = Booking::sum(DB::raw("CASE WHEN MONTH(created_at) = $month THEN facility_income ELSE 0 END"));
         }
+        $monthFacility = $request->input('monthFacilities');
 
-        $facilitiesData = Facility::leftJoin('bookings', 'bookings.facilities_id', '=', 'facilities.id')
-                                ->whereNull('facilities.deleted_at')
-                                ->groupBy('facilities.id', 'facilities.name')
-                                ->select(
-                                    'facilities.name',
-                                    DB::raw('COALESCE(SUM(bookings.amount), 0) as total')  // COALESCE converts null to 0
-                                )
-                                ->get();
-
-        $foodData = Food::leftjoin('food_bookings', 'food_bookings.foods_id', '=', 'foods.id')
-                        ->whereNull('foods.deleted_at')
-                        ->groupBy('foods.id', 'foods.name')
+        $facilitiesData = Facility::leftJoin('bookings', function($join) use ($monthFacility) {
+                            $join->on('bookings.facilities_id', '=', 'facilities.id');
+                            if ($monthFacility) {
+                                // Apply month filter inside LEFT JOIN
+                                $join->whereRaw("DATE_FORMAT(bookings.created_at, '%Y-%m') = ?", [$monthFacility]);
+                            }
+                        })
+                        ->whereNull('facilities.deleted_at')
+                        ->groupBy('facilities.id', 'facilities.name')
                         ->select(
-                            'foods.name',
-                            DB::raw('COALESCE(SUM(foods.price * food_bookings.quantity), 0) as total')  // COALESCE converts null to 0
+                            'facilities.name',
+                            DB::raw('COALESCE(SUM(bookings.amount), 0) as total')
                         )
                         ->get();
+
+        $monthFood = $request->input('month');
+
+        $foodData = Food::leftJoin('food_bookings', function($join) use ($monthFood) {
+            $join->on('food_bookings.foods_id', '=', 'foods.id');
+            if ($monthFood) {
+                // Apply month filter inside the LEFT JOIN to keep all foods
+                $join->whereRaw("DATE_FORMAT(food_bookings.created_at, '%Y-%m') = ?", [$monthFood]);
+            }
+        })
+        ->whereNull('foods.deleted_at')
+        ->groupBy('foods.id', 'foods.name')
+        ->select(
+            'foods.name',
+            DB::raw('COALESCE(SUM(foods.price * food_bookings.quantity), 0) as total')
+        )
+        ->get();
+
         $RoomBest = Facility::leftJoin('bookings', 'bookings.facilities_id', '=', 'facilities.id')
                    ->leftjoin('pictures', 'facilities.id', '=', 'pictures.facilities_id')
                    ->whereNull('facilities.deleted_at')
@@ -198,7 +227,9 @@ class Analytics extends Controller
           'foodData',
           'foodBest',
           'CottageBest',
-          'RoomBest'
+          'RoomBest',
+          'monthFood',
+          'monthFacility'
       ));
   }
 

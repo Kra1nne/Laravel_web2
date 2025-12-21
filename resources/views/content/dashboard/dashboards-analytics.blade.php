@@ -197,6 +197,13 @@
     <div class="card">
       <div class="card-header d-flex justify-content-between align-item-center">
         <h4>Facilties</h4>
+         <form method="GET">
+              <label for="month" class="form-label">Select Month:</label>
+              <div class="d-flex gap-2">
+                <input type="month" id="month" name="monthFacilities" class="form-control" value="{{ $monthFacility }}">
+                <button type="submit" class="btn btn-primary mt-2">Filter</button>
+              </div>
+          </form>
       </div>
       <div class="card-body">
         <div id="facilitiesChart" style="height: 400px;"></div>
@@ -207,19 +214,30 @@
     </div>
   </div>
   <!-- foods -->
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header d-flex justify-content-between align-item-center">
-        <h4>Foods</h4>
+  
+      <div class="col-12">
+          <div class="card">
+              <div class="card-header">
+                  <div class="d-flex justify-content-between">
+                    <h4>Foods Revenue</h4>
+                    <form method="GET">
+                        <label for="month" class="form-label">Select Month:</label>
+                        <div class="d-flex gap-2">
+                          <input type="month" id="month" name="month" class="form-control" value="{{ $monthFood }}">
+                          <button type="submit" class="btn btn-primary mt-2">Filter</button>
+                        </div>
+                    </form>
+                  </div>
+              </div>
+              <div class="card-body">
+                  <div id="foodsChart" style="height: 400px;"></div>
+                  <span id="foods-revenue-data" style="display:none;">
+                      {{ json_encode($foodData->map(fn($f) => ['name' => $f->name, 'total' => $f->total])) }}
+                  </span>
+              </div>
+          </div>
       </div>
-      <div class="card-body">
-        <div id="foodsChart" style="height: 400px;"></div>
-        <span id="foods-revenue-data" style="display:none;">
-            {{ json_encode($foodData->map(fn($f) => ['name' => $f->name, 'total' => $f->total])) }}
-        </span>
-      </div>
-    </div>
-  </div>
+
   <div class="row gy-4">
     <div class="col-xl-4 col-md-12">
         <div class="card h-100 position-relative">

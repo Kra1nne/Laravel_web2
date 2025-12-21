@@ -213,42 +213,42 @@ if (categoryEl) {
   }
 
 
+  document.addEventListener('DOMContentLoaded', function() {
     const foodsBar = document.querySelector('#foodsChart');
-  if (foodsBar) {
-      const categoryData = JSON.parse(document.getElementById('foods-revenue-data').textContent);
+    if (!foodsBar) return;
 
-      // Map names and totals from the array of objects
-      const categories = categoryData.map(item => item.name);
-      const values = categoryData.map(item => item.total);
+    // Get chart data from hidden span
+    const categoryData = JSON.parse(document.getElementById('foods-revenue-data').textContent);
 
-      const categoryChartOptions = {
-          chart: { type: 'bar', height: 320 },
-          series: [{ name: 'Revenue', data: values }],
-          xaxis: { categories },
-          colors: ['#28C76F'],
-          plotOptions: {
-              bar: {
-                  horizontal: false,
-                  columnWidth: '50%',
-                  borderRadius: 6,
-              }
-          },
-          dataLabels: {
-              enabled: true,
-              formatter: val => `₱${val.toLocaleString()}`,
-              style: { fontSize: '13px', colors: ['#333'] }
-          },
-          tooltip: {
-              y: { formatter: val => `₱${val.toLocaleString()}` }
-          },
-          grid: {
-              borderColor: '#e7e7e7',
-              row: { colors: ['#f9f9f9', 'transparent'], opacity: 0.5 },
-          }
-      };
+    // Extract names and totals
+    const categories = categoryData.map(item => item.name);
+    const values = categoryData.map(item => item.total);
 
-      new ApexCharts(foodsBar, categoryChartOptions).render();
-  }
+    // Chart configuration
+    const categoryChartOptions = {
+        chart: { type: 'bar', height: 320 },
+        series: [{ name: 'Revenue', data: values }],
+        xaxis: { categories },
+        colors: ['#28C76F'],
+        plotOptions: {
+            bar: { horizontal: false, columnWidth: '50%', borderRadius: 6 }
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: val => `₱${val.toLocaleString()}`,
+            style: { fontSize: '13px', colors: ['#333'] }
+        },
+        tooltip: { y: { formatter: val => `₱${val.toLocaleString()}` } },
+        grid: {
+            borderColor: '#e7e7e7',
+            row: { colors: ['#f9f9f9', 'transparent'], opacity: 0.5 }
+        }
+    };
+
+    // Render chart
+    new ApexCharts(foodsBar, categoryChartOptions).render();
+});
+
   
 
   // ==========================
