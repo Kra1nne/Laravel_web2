@@ -62,12 +62,6 @@
       "name": "Generate Report",
       "icon": "menu-icon tf-icons ri-file-line",
       "slug": "reports-page"
-    },
-    {
-      "url": "/evaluation",
-      "name": "Evaluation",
-      "icon": "menu-icon tf-icons ri-file-4-line",
-      "slug": "evaluate-display"
     }
   ]
 }

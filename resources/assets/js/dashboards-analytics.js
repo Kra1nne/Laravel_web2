@@ -140,39 +140,37 @@
   // ==========================
 const categoryEl = document.querySelector('#revenueByCategoryChart');
 if (categoryEl) {
-  const categoryData = JSON.parse(document.getElementById('revenue-category-data').textContent);
-  const categories = Object.keys(categoryData);
-  const values = Object.values(categoryData);
+    const categoryData = JSON.parse(document.getElementById('revenue-category-data').textContent);
+    const categories = Object.keys(categoryData);
+    const values = Object.values(categoryData);
 
-  const categoryChartOptions = {
-    chart: { type: 'pie', height: 320 },
-    series: values,
-    labels: categories,
-    colors: ['#28C76F', '#00CFE8'],  // green and blue
-    dataLabels: {
-      enabled: true,
-      formatter: function (val, opts) {
-        const rawValue = opts.w.globals.series[opts.seriesIndex];
-        return `₱${rawValue.toLocaleString()}`;
-      },
-      style: { fontSize: '13px', colors: ['#333'] }
-    },
-    tooltip: {
-      y: {
-        formatter: val => `₱${val.toLocaleString()}`
-      }
-    },
-    legend: {
-      position: 'bottom',
-      labels: {
-        colors: '#333'
-      }
-    }
-  };
+    const categoryChartOptions = {
+        chart: { type: 'pie', height: 320 },
+        series: values,
+        labels: categories,
+        colors: ['#28C76F', '#00CFE8'], // green and blue
+        dataLabels: {
+            enabled: true,
+            position: 'center',
+            formatter: function (val, opts) {
+                const rawValue = opts.w.globals.series[opts.seriesIndex];
+                return `₱${rawValue.toLocaleString()}`;
+            },
+            style: { fontSize: '13px', colors: ['#333'] }
+        },
+        tooltip: {
+            y: {
+                formatter: val => `₱${val.toLocaleString()}`
+            }
+        },
+        legend: {
+            position: 'bottom',
+            labels: { colors: '#333' }
+        }
+    };
 
-  new ApexCharts(categoryEl, categoryChartOptions).render();
+    new ApexCharts(categoryEl, categoryChartOptions).render();
 }
-
 
 
   const facilityBar = document.querySelector('#facilitiesChart');

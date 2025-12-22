@@ -114,13 +114,25 @@ class Analytics extends Controller
         // Fill missing months with 0
         $refundsData = collect(range(1, 12))->map(fn($m) => $refundsData[$m] ?? 0);
 
-        $roomData = Booking::leftjoin('facilities', 'facilities.id', '=', 'bookings.facilities_id')
-                ->where('facilities.category', "=",'room')
-                ->sum('bookings.facility_income');
+        $availableYearsBooking = Booking::selectRaw('YEAR(created_at) as year')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year')
+            ->map(fn($y) => (int)$y); // ensure integers
+        
+        // If no bookings exist, default to current year
+        $year = $request->input('year', $availableYearsBooking->first() ?? now()->year);
 
-        $cottageData = Booking::leftjoin('facilities', 'facilities.id', '=', 'bookings.facilities_id')
-            ->where('facilities.category', "=",'cottage')
+        $roomData = Booking::leftJoin('facilities', 'facilities.id', '=', 'bookings.facilities_id')
+            ->where('facilities.category', 'room')
+            ->whereYear('bookings.created_at', $year)
             ->sum('bookings.facility_income');
+
+        $cottageData = Booking::leftJoin('facilities', 'facilities.id', '=', 'bookings.facilities_id')
+            ->where('facilities.category', 'cottage')
+            ->whereYear('bookings.created_at', $year)
+            ->sum('bookings.facility_income');
+
         
         $totalRevenue = Booking::sum('facility_income');
 
@@ -229,7 +241,9 @@ class Analytics extends Controller
           'CottageBest',
           'RoomBest',
           'monthFood',
-          'monthFacility'
+          'monthFacility',
+          'availableYearsBooking',
+          'year'
       ));
   }
 

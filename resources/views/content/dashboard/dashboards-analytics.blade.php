@@ -196,12 +196,11 @@
   <div class="col-12">
     <div class="card">
       <div class="card-header d-flex justify-content-between align-item-center">
-        <h4>Facilties</h4>
+        <h4>Facilities</h4>
          <form method="GET">
               <label for="month" class="form-label">Select Month:</label>
               <div class="d-flex gap-2">
-                <input type="month" id="month" name="monthFacilities" class="form-control" value="{{ $monthFacility }}">
-                <button type="submit" class="btn btn-primary mt-2">Filter</button>
+                <input type="month" id="monthFacilities" name="monthFacilities" class="form-control" value="{{ $monthFacility }}" onchange="this.form.submit()">
               </div>
           </form>
       </div>
@@ -223,8 +222,7 @@
                     <form method="GET">
                         <label for="month" class="form-label">Select Month:</label>
                         <div class="d-flex gap-2">
-                          <input type="month" id="month" name="month" class="form-control" value="{{ $monthFood }}">
-                          <button type="submit" class="btn btn-primary mt-2">Filter</button>
+                          <input type="month" id="monthFood" name="month" class="form-control" value="{{ $monthFood }}" onchange="this.form.submit()">
                         </div>
                     </form>
                   </div>
@@ -237,50 +235,6 @@
               </div>
           </div>
       </div>
-
-  <div class="row gy-4">
-    <div class="col-xl-4 col-md-12">
-        <div class="card h-100 position-relative">
-            <!-- Badge -->
-            <span class="badge bg-success text-dark position-absolute top-0 start-0 m-2">Best Seller</span>
-            <div class="card-body p-0">
-                <img class="d-block w-100" src="{{ $RoomBest->path }}" alt="Room Best" style="height: 300px; object-fit: cover;">
-            </div>
-            <div class="card-body">
-              <h6>{{ $RoomBest->name}}</h3>
-              <span>Total Sales of ₱{{ number_format($RoomBest->total, 2)}}</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-4 col-md-12">
-        <div class="card h-100 position-relative">
-            <!-- Badge -->
-            <span class="badge bg-success text-dark position-absolute top-0 start-0 m-2">Best Seller</span>
-            <div class="card-body p-0">
-                <img class="d-block w-100" src="{{ $CottageBest->path }}" alt="Room Best" style="height: 300px; object-fit: cover;">
-            </div>
-             <div class="card-body">
-              <h6>{{ $CottageBest->name}}</h3>
-              <span>Total Sales of ₱{{ number_format($CottageBest->total, 2)}}</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-4 col-md-12">
-        <div class="card h-100 position-relative">
-            <!-- Badge -->
-            <span class="badge bg-success text-dark position-absolute top-0 start-0 m-2">Best Seller</span>
-            <div class="card-body p-0">
-                <img class="d-block w-100" src="{{ $foodBest->path }}" alt="Room Best" style="height: 300px; object-fit: cover;">
-            </div>
-             <div class="card-body">
-              <h6>{{ $foodBest->name}}</h3>
-              <span>Total Sales of ₱{{ number_format($foodBest->total, 2)}}</span>
-            </div>
-        </div>
-    </div>
-</div>
 
     <!-- Additional Analytics Section -->
   <div class="col-12 col-lg-6">
@@ -299,6 +253,15 @@
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h4 class="mb-0">Revenue by Category</h4>
+        <form method="GET">
+          <select name="year" class="form-select" onchange="this.form.submit()">
+              @forelse ($availableYearsBooking as $y)
+                  <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+              @empty
+                  <option value="{{ now()->year }}" selected>{{ now()->year }}</option>
+              @endforelse
+          </select>
+      </form>
       </div>
       <div class="card-body">
         <div id="revenueByCategoryChart" style="height: 335px;"></div>
@@ -349,7 +312,49 @@
       </div>
     </div>
   </div>
-  
+  <div class="row gy-3">
+    <div class="col-xl-4 col-md-12">
+        <div class="card h-100 position-relative">
+            <!-- Badge -->
+            <span class="badge bg-success text-dark position-absolute top-0 start-0 m-2">Most Booked</span>
+            <div class="card-body p-2">
+                <img class="d-block w-100" src="{{ $RoomBest->path }}" alt="Room Best" style="height: 300px; object-fit: cover;">
+            </div>
+            <div class="card-body">
+              <h6>{{ $RoomBest->name}}</h3>
+              <span>Total Sales of ₱{{ number_format($RoomBest->total, 2)}}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-md-12">
+        <div class="card h-100 position-relative">
+            <!-- Badge -->
+            <span class="badge bg-success text-dark position-absolute top-0 start-0 m-2">Most Booked</span>
+            <div class="card-body p-2">
+                <img class="d-block w-100" src="{{ $CottageBest->path }}" alt="Room Best" style="height: 300px; object-fit: cover;">
+            </div>
+             <div class="card-body">
+              <h6>{{ $CottageBest->name}}</h3>
+              <span>Total Sales of ₱{{ number_format($CottageBest->total, 2)}}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4 col-md-12">
+        <div class="card h-100 position-relative">
+            <!-- Badge -->
+            <span class="badge bg-success text-dark position-absolute top-0 start-0 m-2">Best Seller</span>
+            <div class="card-body p-2">
+                <img class="d-block w-100" src="{{ $foodBest->path }}" alt="Room Best" style="height: 300px; object-fit: cover;">
+            </div>
+             <div class="card-body">
+              <h6>{{ $foodBest->name}}</h3>
+              <span>Total Sales of ₱{{ number_format($foodBest->total, 2)}}</span>
+            </div>
+        </div>
+    </div>
+</div>
  
 
 
